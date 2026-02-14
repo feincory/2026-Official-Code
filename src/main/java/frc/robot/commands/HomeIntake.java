@@ -15,12 +15,11 @@ import frc.robot.subsystems.Intake;
 public class HomeIntake extends Command {
   /** Creates a new HomeIntake. */
   private final Intake intake;
+
   private final DigitalInput homeSwitch;
   private static final double HOMING_SPEED = 0.1; // Slow descent
   private static final double TIMEOUT = 5.0; // Stop after 3 seconds
   private Timer timer = new Timer();
-
-
 
   public HomeIntake(Intake intake) {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -42,7 +41,6 @@ public class HomeIntake extends Command {
     if (homeSwitch.get()) { // Switch is triggered (active low)
       intake.setintakepower(0);
       intake.resetencoder(); // Set position to zero
-      intake.stopintake();
     } else {
       intake.setintakepower(HOMING_SPEED);
     }
@@ -51,7 +49,7 @@ public class HomeIntake extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-        intake.setintakepower(0);
+    intake.setintakepower(0);
 
     if (timer.hasElapsed(TIMEOUT)) {
       System.out.println("ERROR: Intake homing failed! Sensor not detected.");

@@ -4,6 +4,12 @@
 
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Second;
+import static frc.robot.Constants.*;
+import static frc.robot.generated.TunerConstants.*;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -13,35 +19,30 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Second;
-import static frc.robot.generated.TunerConstants.*;
-import static frc.robot.Constants.*;
-
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
-  private final TalonFX m_spinner = new TalonFX(34, kCANBus);
-  private final TalonFX m_extender = new TalonFX(35, kCANBus);
+  private final TalonFX m_spinner = new TalonFX(28, kCANBus);
+
+  private final TalonFX m_extender = new TalonFX(22, kCANBus);
   private final MotionMagicVoltage m_mmReq = new MotionMagicVoltage(0);
 
   static boolean intakehomed;
-  
-  
 
   public Intake() {
     TalonFXConfiguration extendercfg = new TalonFXConfiguration();
 
-        /* Configure gear ratio */
+    /* Configure gear ratio */
     FeedbackConfigs fdb = extendercfg.Feedback;
     fdb.SensorToMechanismRatio = 12.8; // 12.8 rotor rotations per mechanism rotation
 
     /* Configure Motion Magic */
     MotionMagicConfigs mm = extendercfg.MotionMagic;
-    mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
-      .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
-      // Take approximately 0.1 seconds to reach max accel 
-      .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100));
+    mm.withMotionMagicCruiseVelocity(
+            RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
+        .withMotionMagicAcceleration(
+            RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
+        // Take approximately 0.1 seconds to reach max accel
+        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100));
 
     Slot0Configs slot0 = extendercfg.Slot0;
     slot0.kS = 0.25; // Add 0.25 V output to overcome static friction
@@ -59,7 +60,7 @@ public class Intake extends SubsystemBase {
     if (!status.isOK()) {
       System.out.println("Could not configure device. Error: " + status.toString());
     }
-  intakehomed = false;
+    intakehomed = false;
   }
 
   @Override
@@ -67,45 +68,46 @@ public class Intake extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-public void runintake () {
-  m_spinner.set(0);
-}
-  
-public void stopintake () {
-  m_spinner.set(0);
-}
+  public void runintake() {
+    m_spinner.set(-.45);
+  }
 
-//manual controls
-public void manualintakedeploy () {
-  m_extender.set(.2);
-}
-  
-public void manualintakeretract () {
-  m_extender.set(-.2);
-}
+  public void stopintake() {
+    m_spinner.set(0);
+  }
 
+  // manual controls
+  public void manualintakedeploy() {
+    m_extender.set(.2);
+  }
 
+  public void manualintakeretract() {
+    m_extender.set(-.2);
+  }
 
-public void deployintake () {
-  m_extender.setControl(m_mmReq.withPosition(intakedeployposition).withSlot(0));
-}
-public void retractintake () {
-  m_extender.setControl(m_mmReq.withPosition(intakeretractposition).withSlot(0));
-}
+  public void manualstopdeploy() {
+    m_extender.set(0);
+  }
 
+  public void deployintake() {
+    m_extender.setControl(m_mmReq.withPosition(intakedeployposition).withSlot(0));
+  }
 
-//homing commands
+  public void retractintake() {
+    m_extender.setControl(m_mmReq.withPosition(intakeretractposition).withSlot(0));
+  }
 
-public void resetencoder(){
- m_extender.setPosition(0);
-}
-public void setintakepower(double power){
-  m_extender.set(power);
-}
-public void setintakestop(){
-  m_extender.set(0);
-}
+  // homing commands
 
+  public void resetencoder() {
+    m_extender.setPosition(0);
+  }
 
+  public void setintakepower(double power) {
+    m_extender.set(power);
+  }
 
+  public void setintakestop() {
+    m_extender.set(0);
+  }
 }

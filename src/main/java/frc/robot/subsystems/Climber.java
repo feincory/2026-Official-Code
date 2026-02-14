@@ -4,14 +4,27 @@
 
 package frc.robot.subsystems;
 
+import static frc.robot.generated.TunerConstants.kCANBus;
+
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
+  private final TalonFX m_climber = new TalonFX(40, kCANBus);
+
   public Climber() {}
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+  }
+
+  public void startclimber() {
+    m_climber.set(0);
+  }
+
+  public void stopclimber() {
+    m_climber.set(0);
   }
 }

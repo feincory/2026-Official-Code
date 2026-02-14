@@ -4,8 +4,6 @@
 
 package frc.robot.commands;
 
-
-
 import static frc.robot.Constants.khoodhomeswt;
 
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -17,12 +15,11 @@ import frc.robot.subsystems.Shooter;
 public class HomeShooterHood extends Command {
   /** Creates a new HomeIntake. */
   private final Shooter shooter;
+
   private final DigitalInput homeSwitch;
   private static final double HOMING_SPEED = 0.1; // Slow descent
   private static final double TIMEOUT = 5.0; // Stop after 3 seconds
   private Timer timer = new Timer();
-
-
 
   public HomeShooterHood(Shooter shooter) {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -44,7 +41,6 @@ public class HomeShooterHood extends Command {
     if (homeSwitch.get()) { // Switch is triggered (active low)
       shooter.setshooterhoodpower(0);
       shooter.resetencoder(); // Set position to zero
-      shooter.stopshooterhood();
     } else {
       shooter.setshooterhoodpower(HOMING_SPEED);
     }
@@ -53,7 +49,7 @@ public class HomeShooterHood extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-        shooter.setshooterhoodpower(0);
+    shooter.setshooterhoodpower(0);
 
     if (timer.hasElapsed(TIMEOUT)) {
       System.out.println("ERROR: Intake homing failed! Sensor not detected.");

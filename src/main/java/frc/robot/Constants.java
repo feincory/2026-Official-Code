@@ -6,6 +6,7 @@
 // at the root directory of this project.
 
 package frc.robot;
+
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -27,18 +28,17 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
-// Intake Constants
+  // Intake Constants
   public static double intakedeployposition = 10;
   public static double intakeretractposition = 0;
-  public static int kintakehomeswt = 0; 
+  public static int kintakehomeswt = 0;
 
-//shooter constancts
+  // shooter constancts
   public static int khoodhomeswt = 1;
 
-//Climber Constants
+  // Climber Constants
+  public static double climbspeed = .5;
 
-
-//turret constants
+  // turret constants
   public static int potanalogport = 0;
-
 }

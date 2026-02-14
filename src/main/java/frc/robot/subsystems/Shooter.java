@@ -5,7 +5,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
-//import static edu.wpi.first.units.Units.Volts;
+// import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.generated.TunerConstants.*;
 
 import com.ctre.phoenix6.StatusCode;
@@ -16,14 +16,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
-    private final TalonFX m_shooter = new TalonFX(31, kCANBus);
-    private final TalonFX m_accelmtr = new TalonFX(32, kCANBus);
-    private final TalonFX m_hoodtiltmtr = new TalonFX(33, kCANBus);
-    
-    NeutralOut m_coastmode = new NeutralOut();
+  private final TalonFX m_shooter = new TalonFX(36, "rio");
+
+  private final TalonFX m_accelmtr = new TalonFX(25, kCANBus);
+  private final TalonFX m_hoodtiltmtr = new TalonFX(35, "rio");
+
+  NeutralOut m_coastmode = new NeutralOut();
 
   public Shooter() {
-   
 
     // Shooter motor configuration
     TalonFXConfiguration shooterconfigs = new TalonFXConfiguration();
@@ -57,8 +57,7 @@ public class Shooter extends SubsystemBase {
     hoodtiltconfig.Slot0.kD = 6; // A velocity of 1 rps results in 6 A output
     // Peak output of 120 A
     hoodtiltconfig.TorqueCurrent.withPeakForwardTorqueCurrent(Amps.of(120))
-      .withPeakReverseTorqueCurrent(Amps.of(-120));
-
+        .withPeakReverseTorqueCurrent(Amps.of(-120));
 
     StatusCode status = StatusCode.StatusCodeNotInitialized;
     for (int i = 0; i < 5; ++i) {
@@ -79,8 +78,8 @@ public class Shooter extends SubsystemBase {
   }
 
   public void runshooter() {
-    m_shooter.set(.5);
-    m_accelmtr.set(.5);
+    m_shooter.set(-.45);
+    m_accelmtr.set(.45);
   }
 
   public void stopshooter() {
@@ -88,24 +87,30 @@ public class Shooter extends SubsystemBase {
     m_accelmtr.set(0);
   }
 
-    public void shootersetvelocity(double rpm) {
+  public void shootersetvelocity(double rpm) {
     m_shooter.set(rpm);
     m_accelmtr.set(rpm);
   }
 
+  // homing commands
 
-  //homing commands
-
-  public void resetencoder(){
-  m_hoodtiltmtr.setPosition(0);
+  public void resetencoder() {
+    m_hoodtiltmtr.setPosition(0);
   }
-  public void setshooterhoodpower(double power){
+
+  public void setshooterhoodpower(double power) {
     m_hoodtiltmtr.set(power);
   }
-  public void stopshooterhood(){
-    m_hoodtiltmtr.set(0);
+
+  public void shooterhoodup() {
+    m_hoodtiltmtr.set(.1);
   }
 
+  public void shooterhooddown() {
+    m_hoodtiltmtr.set(-.1);
+  }
 
-
+  public void stopshooterhood() {
+    m_hoodtiltmtr.set(0);
+  }
 }

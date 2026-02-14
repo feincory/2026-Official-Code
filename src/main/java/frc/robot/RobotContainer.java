@@ -9,7 +9,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -17,6 +16,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -33,6 +33,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.ShooterCalc;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -45,25 +46,22 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Shooter shooter = new Shooter();
-  private final Whirlpool whirpool = new Whirlpool();
-  private final Climber climber = new Climber ();
-  private final Turret turret = new Turret ();
-  private final Intake intake = new Intake ();
-
+  private final Whirlpool whirlpool = new Whirlpool();
+  private final Climber climber = new Climber();
+  private final Turret turret = new Turret();
+  private final Intake intake = new Intake();
+  private final ShooterCalc shooterCalc = new ShooterCalc();
 
   // Controller
   private final CommandJoystick flightcontroller = new CommandJoystick(0);
   private final CommandXboxController operatorcontroller = new CommandXboxController(1);
-
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-        NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
-
-
+    NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
 
     switch (Constants.currentMode) {
       case REAL:
@@ -173,9 +171,53 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     flightcontroller.button(16).onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    //Shooter Controls
+    // Shooter Controls
     operatorcontroller.y().onTrue(new InstantCommand(shooter::runshooter));
     operatorcontroller.y().onFalse(new InstantCommand(shooter::stopshooter));
+    // Shooter Controls
+    operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    operatorcontroller.povUp().onTrue(new InstantCommand(shooter::shooterhoodup));
+    operatorcontroller.povUp().onFalse(new InstantCommand(shooter::stopshooterhood));
+
+    operatorcontroller.povDown().onTrue(new InstantCommand(shooter::shooterhooddown));
+    operatorcontroller.povDown().onFalse(new InstantCommand(shooter::stopshooterhood));
+
+    // turret controls
+    operatorcontroller.povRight().onTrue(new InstantCommand(turret::manleft));
+    operatorcontroller.povRight().onFalse(new InstantCommand(turret::stop));
+
+    operatorcontroller.povLeft().onTrue(new InstantCommand(turret::manright));
+    operatorcontroller.povLeft().onFalse(new InstantCommand(turret::stop));
+
+    // Intake controls
+    operatorcontroller.rightBumper().onTrue(new InstantCommand(intake::manualintakedeploy));
+    operatorcontroller.rightBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
+    operatorcontroller.leftBumper().onTrue(new InstantCommand(intake::manualintakeretract));
+    operatorcontroller.leftBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
+    operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
+    operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
+
+    operatorcontroller
+        .leftTrigger()
+        .onTrue(
+            Commands.sequence(
+                new InstantCommand(whirlpool::startfeeder),
+                new WaitCommand(2),
+                new InstantCommand(whirlpool::startwhirlpool)));
+
+    operatorcontroller.leftTrigger().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    // operatorcontroller
+    //     .povDown()
+    //     .onTrue(Command.runonce(shooterCalc.getDistanceToGoal, ShooterCalc));
 
     // Reset gyro to 0° when B button is pressed
     flightcontroller
