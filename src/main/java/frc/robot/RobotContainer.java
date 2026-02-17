@@ -7,6 +7,9 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,7 +19,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -33,6 +35,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.util.ShooterCalc;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -51,6 +56,7 @@ public class RobotContainer {
   private final Turret turret = new Turret();
   private final Intake intake = new Intake();
   private final ShooterCalc shooterCalc = new ShooterCalc();
+  private final Vision vision;
 
   // Controller
   private final CommandJoystick flightcontroller = new CommandJoystick(0);
@@ -75,7 +81,11 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOLimelight(camera0Name, drive::getRotation),
+                new VisionIOLimelight(camera1Name, drive::getRotation));
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
         // implementations
@@ -105,7 +115,11 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOLimelight(camera0Name, drive::getRotation),
+                new VisionIOLimelight(camera1Name, drive::getRotation));
         break;
 
       default:
@@ -117,7 +131,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
 
@@ -181,14 +195,17 @@ public class RobotContainer {
     operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
     operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
-    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
-    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
-
     operatorcontroller.povUp().onTrue(new InstantCommand(shooter::shooterhoodup));
     operatorcontroller.povUp().onFalse(new InstantCommand(shooter::stopshooterhood));
 
     operatorcontroller.povDown().onTrue(new InstantCommand(shooter::shooterhooddown));
     operatorcontroller.povDown().onFalse(new InstantCommand(shooter::stopshooterhood));
+
+    operatorcontroller.start().onTrue(new InstantCommand(() -> shooter.setshooterhood(.75)));
+    operatorcontroller.start().onFalse(new InstantCommand(() -> shooter.setshooterhood(.25)));
+
+    operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.resethood()));
+    operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
 
     // turret controls
     operatorcontroller.povRight().onTrue(new InstantCommand(turret::manleft));
@@ -197,6 +214,10 @@ public class RobotContainer {
     operatorcontroller.povLeft().onTrue(new InstantCommand(turret::manright));
     operatorcontroller.povLeft().onFalse(new InstantCommand(turret::stop));
 
+    operatorcontroller.leftTrigger().onTrue(new InstantCommand(() -> turret.setturrettoangle(45)));
+    operatorcontroller
+        .rightTrigger()
+        .onTrue(new InstantCommand(() -> turret.setturrettoangle(-45)));
     // Intake controls
     operatorcontroller.rightBumper().onTrue(new InstantCommand(intake::manualintakedeploy));
     operatorcontroller.rightBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
@@ -205,15 +226,17 @@ public class RobotContainer {
     operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 
-    operatorcontroller
-        .leftTrigger()
-        .onTrue(
-            Commands.sequence(
-                new InstantCommand(whirlpool::startfeeder),
-                new WaitCommand(2),
-                new InstantCommand(whirlpool::startwhirlpool)));
+    flightcontroller.button(13).onTrue(new InstantCommand(intake::runintake));
+    flightcontroller.button(13).onFalse(new InstantCommand(intake::stopintake));
+    // operatorcontroller
+    //     .leftTrigger()
+    //     .onTrue(
+    //         Commands.sequence(
+    //             new InstantCommand(whirlpool::startfeeder),
+    //             new WaitCommand(2),
+    //             new InstantCommand(whirlpool::startwhirlpool)));
 
-    operatorcontroller.leftTrigger().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    // operatorcontroller.leftTrigger().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     // operatorcontroller
     //     .povDown()
