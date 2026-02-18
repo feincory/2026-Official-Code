@@ -57,6 +57,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private static final String kAimOffsetInchesKey = "AutoAim/LateralOffsetInches";
   private static final String kDistanceOffsetInchesKey = "AutoAim/DistanceOffsetInches";
+  private static final String kTurretRotationLeadSecondsKey = "AutoAim/TurretRotationLeadSec";
+  private static final String kTurretRotationCompScaleKey = "AutoAim/TurretRotationCompScale";
 
   // Subsystems
   private final Drive drive;
@@ -101,6 +103,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
     SmartDashboard.putNumber(kAimOffsetInchesKey, -20);
     SmartDashboard.putNumber(kDistanceOffsetInchesKey, 0.0);
+    SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
+    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
 
     switch (Constants.currentMode) {
       case REAL:
@@ -276,7 +280,13 @@ public class RobotContainer {
                   ShooterCalc.ShotSolution shot =
                       shooterCalc.calculateShot(drive.getPose(), goalCenter);
 
-                  turret.setturrettoangle(shot.getTurretCommandDegrees());
+                  double yawRateRadPerSec = drive.getYawRateRadPerSec();
+                  double leadSec = SmartDashboard.getNumber(kTurretRotationLeadSecondsKey, 0.0);
+                  double compScale = SmartDashboard.getNumber(kTurretRotationCompScaleKey, 1.0);
+                  double turretRotationCompDeg =
+                      Units.radiansToDegrees(yawRateRadPerSec * leadSec * compScale);
+
+                  turret.setturrettoangle(shot.getTurretCommandDegrees() + turretRotationCompDeg);
                   shooter.shootersetvelocity(shot.getShooterRps());
                   shooter.setshooterhood(shot.getHoodPercent());
 
@@ -290,6 +300,8 @@ public class RobotContainer {
                       "AutoAim/LateralOffsetMeters", shooterCalc.getLateralAimOffsetMeters());
                   SmartDashboard.putNumber(
                       "AutoAim/DistanceOffsetMeters", shooterCalc.getDistanceOffsetMeters());
+                  SmartDashboard.putNumber("AutoAim/YawRateRadPerSec", yawRateRadPerSec);
+                  SmartDashboard.putNumber("AutoAim/TurretRotationCompDeg", turretRotationCompDeg);
                 },
                 turret,
                 shooter));

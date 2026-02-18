@@ -323,6 +323,11 @@ public class Drive extends SubsystemBase {
     return getPose().getRotation();
   }
 
+  /** Returns measured robot yaw rate in radians/sec (CCW positive). */
+  public double getYawRateRadPerSec() {
+    return gyroInputs.yawVelocityRadPerSec;
+  }
+
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
