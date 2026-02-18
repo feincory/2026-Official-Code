@@ -17,7 +17,7 @@ public class HomeShooterHood extends Command {
   private final Shooter shooter;
 
   private final DigitalInput homeSwitch;
-  private static final double HOMING_SPEED = 0.1; // Slow descent
+  private static final double HOMING_SPEED = -0.05; // Slow descent
   private static final double TIMEOUT = 5.0; // Stop after 3 seconds
   private Timer timer = new Timer();
 
@@ -38,7 +38,7 @@ public class HomeShooterHood extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (homeSwitch.get()) { // Switch is triggered (active low)
+    if (false /*homeSwitch.get()*/) { // Switch is triggered (active low)
       shooter.setshooterhoodpower(0);
       shooter.resetencoder(); // Set position to zero
     } else {
@@ -50,6 +50,7 @@ public class HomeShooterHood extends Command {
   @Override
   public void end(boolean interrupted) {
     shooter.setshooterhoodpower(0);
+    shooter.resetencoder();
 
     if (timer.hasElapsed(TIMEOUT)) {
       System.out.println("ERROR: Intake homing failed! Sensor not detected.");
@@ -61,6 +62,6 @@ public class HomeShooterHood extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return homeSwitch.get() || timer.hasElapsed(TIMEOUT);
+    return /*homeSwitch.get()*/ false || timer.hasElapsed(TIMEOUT);
   }
 }

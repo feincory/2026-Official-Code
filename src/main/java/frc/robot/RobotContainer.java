@@ -14,8 +14,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -23,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
@@ -39,6 +44,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.util.ShooterCalc;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -48,6 +55,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private static final String kAimOffsetInchesKey = "AutoAim/LateralOffsetInches";
+  private static final String kDistanceOffsetInchesKey = "AutoAim/DistanceOffsetInches";
+
   // Subsystems
   private final Drive drive;
   private final Shooter shooter = new Shooter();
@@ -55,7 +65,28 @@ public class RobotContainer {
   private final Climber climber = new Climber();
   private final Turret turret = new Turret();
   private final Intake intake = new Intake();
-  private final ShooterCalc shooterCalc = new ShooterCalc();
+  // +X forward, +Y left. Replace with measured turret center offset from robot center.
+  private static final Translation2d kTurretOffsetFromRobotCenterMeters =
+      new Translation2d(-0.0889, .1461);
+  //   new Translation2d(-0.0889, .1461);
+  // Turret 0 deg in your Turret subsystem points to rear of robot.
+  private static final Rotation2d kTurretZeroDirectionInRobotFrame = Rotation2d.fromDegrees(180.0);
+  // Replace with real field goal center positions for your game.
+  // private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(4.629,
+  // 4.032);
+  private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
+  private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
+  // private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
+
+  private final ShooterCalc shooterCalc =
+      new ShooterCalc(
+          kTurretOffsetFromRobotCenterMeters,
+          kTurretZeroDirectionInRobotFrame,
+          true,
+          -225.0,
+          225.0,
+          buildShooterRpsTable(),
+          buildHoodPercentTable());
   private final Vision vision;
 
   // Controller
@@ -68,6 +99,8 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
+    SmartDashboard.putNumber(kAimOffsetInchesKey, -20);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 0.0);
 
     switch (Constants.currentMode) {
       case REAL:
@@ -188,11 +221,18 @@ public class RobotContainer {
     // Shooter Controls
     operatorcontroller.y().onTrue(new InstantCommand(shooter::runshooter));
     operatorcontroller.y().onFalse(new InstantCommand(shooter::stopshooter));
-    // Shooter Controls
+
+    operatorcontroller.x().onTrue(new InstantCommand(() -> shooter.shootersetvelocity(30)));
+    operatorcontroller.x().onFalse(new InstantCommand(shooter::stopshooter));
+
     operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
     operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
+    flightcontroller.button(6).onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    flightcontroller.button(6).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
     operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+
     operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     operatorcontroller.povUp().onTrue(new InstantCommand(shooter::shooterhoodup));
@@ -204,8 +244,8 @@ public class RobotContainer {
     operatorcontroller.start().onTrue(new InstantCommand(() -> shooter.setshooterhood(.75)));
     operatorcontroller.start().onFalse(new InstantCommand(() -> shooter.setshooterhood(.25)));
 
-    operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.resethood()));
-    operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
+    operatorcontroller.back().onTrue(new HomeShooterHood(shooter));
+    // operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
 
     // turret controls
     operatorcontroller.povRight().onTrue(new InstantCommand(turret::manleft));
@@ -214,10 +254,47 @@ public class RobotContainer {
     operatorcontroller.povLeft().onTrue(new InstantCommand(turret::manright));
     operatorcontroller.povLeft().onFalse(new InstantCommand(turret::stop));
 
-    operatorcontroller.leftTrigger().onTrue(new InstantCommand(() -> turret.setturrettoangle(45)));
-    operatorcontroller
-        .rightTrigger()
-        .onTrue(new InstantCommand(() -> turret.setturrettoangle(-45)));
+    // operatorcontroller.leftTrigger().onTrue(new InstantCommand(() ->
+    // turret.setturrettoangle(45)));
+    // operatorcontroller
+    //     .rightTrigger()
+    //     .onTrue(new InstantCommand(() -> turret.setturrettoangle(-45)));
+
+    // Hold left trigger to continuously auto-aim turret using pose + turret offset geometry.
+    flightcontroller
+        .button(4)
+        .whileTrue(
+            Commands.run(
+                () -> {
+                  double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 0.0);
+                  shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
+                  double distanceOffsetInches =
+                      SmartDashboard.getNumber(kDistanceOffsetInchesKey, 0.0);
+                  shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
+
+                  Translation2d goalCenter = getCurrentAllianceGoalCenter();
+                  ShooterCalc.ShotSolution shot =
+                      shooterCalc.calculateShot(drive.getPose(), goalCenter);
+
+                  turret.setturrettoangle(shot.getTurretCommandDegrees());
+                  shooter.shootersetvelocity(shot.getShooterRps());
+                  shooter.setshooterhood(shot.getHoodPercent());
+
+                  SmartDashboard.putNumber("AutoAim/DistanceMeters", shot.getDistanceMeters());
+                  SmartDashboard.putNumber(
+                      "AutoAim/EffectiveDistanceMeters", shot.getEffectiveDistanceMeters());
+                  SmartDashboard.putNumber("AutoAim/TurretCmdDeg", shot.getTurretCommandDegrees());
+                  SmartDashboard.putNumber("AutoAim/ShooterRps", shot.getShooterRps());
+                  SmartDashboard.putNumber("AutoAim/HoodPercent", shot.getHoodPercent());
+                  SmartDashboard.putNumber(
+                      "AutoAim/LateralOffsetMeters", shooterCalc.getLateralAimOffsetMeters());
+                  SmartDashboard.putNumber(
+                      "AutoAim/DistanceOffsetMeters", shooterCalc.getDistanceOffsetMeters());
+                },
+                turret,
+                shooter));
+
+    flightcontroller.button(4).onFalse(new InstantCommand(shooter::stopshooter));
     // Intake controls
     operatorcontroller.rightBumper().onTrue(new InstantCommand(intake::manualintakedeploy));
     operatorcontroller.rightBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
@@ -261,5 +338,44 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  private Translation2d getCurrentAllianceGoalCenter() {
+    return DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+            == DriverStation.Alliance.Red
+        ? kRedGoalCenterFieldMeters
+        : kBlueGoalCenterFieldMeters;
+  }
+
+  private static NavigableMap<Double, Double> buildShooterRpsTable() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(0.889, 28.0);
+    table.put(1.2954, 30.0);
+    table.put(1.778, 30.0);
+    table.put(2.54, 32.0);
+    table.put(2.794, 35.0);
+    table.put(3.556, 37.0);
+    table.put(4.704, 40.0);
+    table.put(4.7244, 43.0);
+    table.put(5.3848, 43.0);
+    table.put(7.1374, 50.0);
+    table.put(9.9568, 75.0);
+    return table;
+  }
+
+  private static NavigableMap<Double, Double> buildHoodPercentTable() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(0.889, 0.0);
+    table.put(1.2954, 0.05);
+    table.put(1.778, 0.25);
+    table.put(2.54, 0.3);
+    table.put(2.794, 0.25);
+    table.put(3.556, 0.3);
+    table.put(4.4704, 0.37);
+    table.put(4.7244, 0.38);
+    table.put(5.3848, 0.48);
+    table.put(7.1374, 0.51);
+    table.put(9.9568, 1.0);
+    return table;
   }
 }

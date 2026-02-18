@@ -28,8 +28,8 @@ public class Turret extends SubsystemBase {
 
   private final AnalogInput m_pot = new AnalogInput(0);
 
-  private final int potmaxvalue = 3949;
-  private final int potminvalue = 400;
+  private final int potmaxvalue = 4011;
+  private final int potminvalue = 430;
   // middle of pot travel will be 2027
   private final double gearboxreuction = 162 / 23;
   // CW and CCW are viewed from top of robot, turret 0 degrees will be facing rear of robot
@@ -56,19 +56,19 @@ public class Turret extends SubsystemBase {
     /* Configure Motion Magic */
     MotionMagicConfigs mm = cfg.MotionMagic;
     mm.withMotionMagicCruiseVelocity(
-            RotationsPerSecond.of(25)) // 5 (mechanism) rotations per second cruise
+            RotationsPerSecond.of(2)) // 5 (mechanism) rotations per second cruise
         .withMotionMagicAcceleration(
-            RotationsPerSecondPerSecond.of(25)) // Take approximately 0.5 seconds to reach max vel
+            RotationsPerSecondPerSecond.of(5)) // Take approximately 0.5 seconds to reach max vel
         // Take approximately 0.1 seconds to reach max accel
         .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(300));
 
     Slot0Configs slot0 = cfg.Slot0;
-    slot0.kS = 03; // Add 0.25 V output to overcome static friction
+    slot0.kS = 0.25; // Add 0.25 V output to overcome static friction
     slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
     slot0.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0.kP = 30; // A position error of 0.2 rotations results in 12 V output
+    slot0.kP = 40; // A position error of 0.2 rotations results in 12 V output
     slot0.kI = 0; // No output for integrated error
-    slot0.kD = 1.5; // A velocity error of 1 rps results in 0.5 V output
+    slot0.kD = 0; // A velocity error of 1 rps results in 0.5 V output
 
     StatusCode status = StatusCode.StatusCodeNotInitialized;
     for (int i = 0; i < 5; ++i) {
@@ -89,7 +89,7 @@ public class Turret extends SubsystemBase {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Pot Value", m_pot.getValue());
 
-    turretdegrees = (m_pot.getValue() - potmiddlerange) * potdegreesratio;
+    turretdegrees = getCurrentTurretAngleDegrees();
     SmartDashboard.putNumber("Calc Turret Degrees", turretdegrees);
   }
 
@@ -106,6 +106,45 @@ public class Turret extends SubsystemBase {
   }
 
   public void setturrettoangle(double angle) {
-    m_turret.setControl(m_mmReq.withPosition(angle / 360).withSlot(0));
+    double currentAngleDeg = getCurrentTurretAngleDegrees();
+    double targetAngleDeg = chooseShortestPathTarget(currentAngleDeg, angle);
+    m_turret.setControl(m_mmReq.withPosition(targetAngleDeg / 360.0).withSlot(0));
+    SmartDashboard.putNumber("Turret/TargetAngleDeg", targetAngleDeg);
+  }
+
+  public double getCurrentTurretAngleDegrees() {
+    return m_turret.getPosition().getValueAsDouble() * 360.0;
+  }
+
+  public double getPotAngleDegrees() {
+    return (m_pot.getValue() - potmiddlerange) * potdegreesratio;
+  }
+
+  private double chooseShortestPathTarget(double currentAngleDeg, double requestedAngleDeg) {
+    double[] candidates = {requestedAngleDeg, requestedAngleDeg + 360.0, requestedAngleDeg - 360.0};
+    double bestTarget = clampToTurretLimits(requestedAngleDeg);
+    double bestDelta = Math.abs(bestTarget - currentAngleDeg);
+
+    for (double candidate : candidates) {
+      if (candidate < maxrotationCCW || candidate > maxrotationCW) {
+        continue;
+      }
+      double delta = Math.abs(candidate - currentAngleDeg);
+      if (delta < bestDelta) {
+        bestDelta = delta;
+        bestTarget = candidate;
+      }
+    }
+    return bestTarget;
+  }
+
+  private double clampToTurretLimits(double angleDeg) {
+    if (angleDeg > maxrotationCW) {
+      return maxrotationCW;
+    }
+    if (angleDeg < maxrotationCCW) {
+      return maxrotationCCW;
+    }
+    return angleDeg;
   }
 }

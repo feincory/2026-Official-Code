@@ -18,7 +18,10 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
@@ -28,6 +31,9 @@ public class Shooter extends SubsystemBase {
   private final TalonFX m_accelmtr = new TalonFX(25, kCANBus);
   private final TalonFX m_hoodtiltmtr = new TalonFX(35, "rio");
   private final MotionMagicVoltage mmhood = new MotionMagicVoltage(0);
+  private final VelocityVoltage shooterVelocityReq = new VelocityVoltage(0);
+  private final VelocityVoltage accelVelocityReq = new VelocityVoltage(0);
+  private static final double kAccelRpsMultiplier = -1.0;
 
   NeutralOut m_coastmode = new NeutralOut();
   private double hoodmin = 0;
@@ -37,30 +43,31 @@ public class Shooter extends SubsystemBase {
 
     // Shooter motor configuration
     TalonFXConfiguration shooterconfigs = new TalonFXConfiguration();
+    shooterconfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     /* Voltage-based velocity requires a velocity feed forward to account for the back-emf of the motor */
-    shooterconfigs.Slot0.kS = 0.1; // To account for friction, add 0.1 V of static feedforward
+    shooterconfigs.Slot0.kS = 0.5; // To account for friction, add 0.1 V of static feedforward
     shooterconfigs.Slot0.kV =
         0.12; // Kraken X60 is a 500 kV motor, 500 rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts
     // / rotation per second
-    shooterconfigs.Slot0.kP = 0.11; // An error of 1 rotation per second results in 0.11 V output
+    shooterconfigs.Slot0.kP = 0.75; // An error of 1 rotation per second results in 0.11 V output
     shooterconfigs.Slot0.kI = 0; // No output for integrated error
-    shooterconfigs.Slot0.kD = 0; // No output for error derivative
+    shooterconfigs.Slot0.kD = 0.2; // No output for error derivative
     // Peak output of 8 volts
     shooterconfigs.Voltage.withPeakForwardVoltage(Volts.of(12))
         .withPeakReverseVoltage(Volts.of(-12));
 
-    shooterconfigs.OpenLoopRamps.VoltageOpenLoopRampPeriod = .3;
-    shooterconfigs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .3;
+    shooterconfigs.OpenLoopRamps.VoltageOpenLoopRampPeriod = .2;
+    shooterconfigs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .2;
 
     // Accelerator motor configuration
     TalonFXConfiguration accelconfigs = new TalonFXConfiguration();
-    accelconfigs.Slot0.kS = 0.1; // To account for friction, add 0.1 V of static feedforward
+    accelconfigs.Slot0.kS = 0.15; // To account for friction, add 0.1 V of static feedforward
     accelconfigs.Slot0.kV =
-        0.12; // Kraken X60 is a 500 kV motor, 500 rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts
+        0.122; // Kraken X60 is a 500 kV motor, 500 rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts
     // / rotation per second
-    accelconfigs.Slot0.kP = 0.11; // An error of 1 rotation per second results in 0.11 V output
+    accelconfigs.Slot0.kP = 1.5; // An error of 1 rotation per second results in 0.11 V output
     accelconfigs.Slot0.kI = 0; // No output for integrated error
-    accelconfigs.Slot0.kD = 0; // No output for error derivative
+    accelconfigs.Slot0.kD = 0.1; // No output for error derivative
     // Peak output of 8 volts
     accelconfigs.Voltage.withPeakForwardVoltage(Volts.of(12)).withPeakReverseVoltage(Volts.of(-12));
 
@@ -101,6 +108,9 @@ public class Shooter extends SubsystemBase {
     if (!status.isOK()) {
       System.out.println("Could not apply configs, error code: " + status.toString());
     }
+
+    SmartDashboard.putNumber("Shooter RPS", 0);
+    SmartDashboard.putNumber("Hood Position", 0);
   }
 
   @Override
@@ -110,8 +120,8 @@ public class Shooter extends SubsystemBase {
   }
 
   public void runshooter() {
-    m_shooter.set(-.45);
-    m_accelmtr.set(.45);
+    m_shooter.set(.45);
+    m_accelmtr.set(-.45);
   }
 
   public void stopshooter() {
@@ -119,9 +129,9 @@ public class Shooter extends SubsystemBase {
     m_accelmtr.set(0);
   }
 
-  public void shootersetvelocity(double rpm) {
-    // m_shooter.setControl(mmhood.withPosition(rpm).withSlot(0));
-    // m_accelmtr.set(rpm);
+  public void shootersetvelocity(double rps) {
+    m_shooter.setControl(shooterVelocityReq.withVelocity(rps));
+    m_accelmtr.setControl(accelVelocityReq.withVelocity(rps));
   }
 
   public void setshooterhood(double position) {
