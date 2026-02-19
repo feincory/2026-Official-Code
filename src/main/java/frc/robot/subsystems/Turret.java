@@ -31,7 +31,7 @@ public class Turret extends SubsystemBase {
   private final int potmaxvalue = 4011;
   private final int potminvalue = 430;
   // middle of pot travel will be 2027
-  private final double gearboxreuction = 162 / 23;
+  // private final double gearboxreuction = 162 / 23;
   // CW and CCW are viewed from top of robot, turret 0 degrees will be facing rear of robot
   // (opposite of intake)
   private final double maxrotationCW = 225;
@@ -45,6 +45,7 @@ public class Turret extends SubsystemBase {
   private final double potmiddlerange = (potrange / 2) + potminvalue;
 
   private double turretdegrees = 0;
+  private double m_targetAngleDeg = 0.0;
 
   public Turret() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -81,6 +82,7 @@ public class Turret extends SubsystemBase {
 
     turretdegrees = (m_pot.getValue() - potmiddlerange) * potdegreesratio;
     m_turret.setPosition(turretdegrees / 360);
+    m_targetAngleDeg = turretdegrees;
     System.out.println("Set Turret Angle" + turretdegrees);
   }
 
@@ -91,6 +93,7 @@ public class Turret extends SubsystemBase {
 
     turretdegrees = getCurrentTurretAngleDegrees();
     SmartDashboard.putNumber("Calc Turret Degrees", turretdegrees);
+    SmartDashboard.putNumber("Turret/AngleErrorDeg", getAngleErrorDegrees());
   }
 
   public void manright() {
@@ -108,6 +111,7 @@ public class Turret extends SubsystemBase {
   public void setturrettoangle(double angle) {
     double currentAngleDeg = getCurrentTurretAngleDegrees();
     double targetAngleDeg = chooseShortestPathTarget(currentAngleDeg, angle);
+    m_targetAngleDeg = targetAngleDeg;
     m_turret.setControl(m_mmReq.withPosition(targetAngleDeg / 360.0).withSlot(0));
     SmartDashboard.putNumber("Turret/TargetAngleDeg", targetAngleDeg);
   }
@@ -118,6 +122,14 @@ public class Turret extends SubsystemBase {
 
   public double getPotAngleDegrees() {
     return (m_pot.getValue() - potmiddlerange) * potdegreesratio;
+  }
+
+  public double getAngleErrorDegrees() {
+    return m_targetAngleDeg - getCurrentTurretAngleDegrees();
+  }
+
+  public boolean isAtTarget(double toleranceDeg) {
+    return Math.abs(getAngleErrorDegrees()) <= toleranceDeg;
   }
 
   private double chooseShortestPathTarget(double currentAngleDeg, double requestedAngleDeg) {

@@ -21,7 +21,11 @@ public class Climber extends SubsystemBase {
   }
 
   public void startclimber() {
-    m_climber.set(0);
+    m_climber.set(1);
+  }
+
+  public void reverseclimber() {
+    m_climber.set(-1);
   }
 
   public void stopclimber() {

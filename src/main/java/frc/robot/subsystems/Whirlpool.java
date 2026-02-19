@@ -23,8 +23,8 @@ public class Whirlpool extends SubsystemBase {
   }
 
   public void startwhirlpool() {
-    m_whirlpool.set(.8);
-    m_feeder.set(.8);
+    m_whirlpool.set(.6);
+    m_feeder.set(1);
   }
 
   public void stopwhirlpool() {

@@ -21,6 +21,7 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -33,11 +34,12 @@ public class Shooter extends SubsystemBase {
   private final MotionMagicVoltage mmhood = new MotionMagicVoltage(0);
   private final VelocityVoltage shooterVelocityReq = new VelocityVoltage(0);
   private final VelocityVoltage accelVelocityReq = new VelocityVoltage(0);
-  private static final double kAccelRpsMultiplier = -1.0;
+  // private static final double kAccelRpsMultiplier = -1.0;
 
   NeutralOut m_coastmode = new NeutralOut();
-  private double hoodmin = 0;
-  private double hoodmax = 14.185;
+  NeutralOut m_brakemode = new NeutralOut();
+  // private double hoodmin = 0;
+  // private double hoodmax = 14.185;
 
   public Shooter() {
 
@@ -79,6 +81,7 @@ public class Shooter extends SubsystemBase {
 
     /* Configure gear ratio */
     FeedbackConfigs fdb = hoodtiltconfig.Feedback;
+    hoodtiltconfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     fdb.SensorToMechanismRatio = 14.185; // 12.8 rotor rotations per mechanism rotation
 
     /* Configure Motion Magic */
@@ -94,7 +97,7 @@ public class Shooter extends SubsystemBase {
     slot0.kS = 1; // Add 0.25 V output to overcome static friction
     slot0.kV = 0.3; // A velocity target of 1 rps results in 0.12 V output
     slot0.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0.kP = 150; // A position error of 0.2 rotations results in 12 V output
+    slot0.kP = 120; // A position error of 0.2 rotations results in 12 V output
     slot0.kI = 0; // No output for integrated error
     slot0.kD = 0.2; // A velocity error of 1 rps results in 0.5 V output
 
@@ -131,7 +134,7 @@ public class Shooter extends SubsystemBase {
 
   public void shootersetvelocity(double rps) {
     m_shooter.setControl(shooterVelocityReq.withVelocity(rps));
-    m_accelmtr.setControl(accelVelocityReq.withVelocity(rps));
+    m_accelmtr.setControl(accelVelocityReq.withVelocity(rps * 1.2));
   }
 
   public void setshooterhood(double position) {
@@ -168,5 +171,13 @@ public class Shooter extends SubsystemBase {
 
   public void stopshooterhood() {
     m_hoodtiltmtr.set(0);
+  }
+
+  public double getShooterRps() {
+    return m_shooter.getVelocity().getValueAsDouble();
+  }
+
+  public boolean isAtSpeed(double targetRps, double toleranceRps) {
+    return Math.abs(Math.abs(getShooterRps()) - Math.abs(targetRps)) <= toleranceRps;
   }
 }

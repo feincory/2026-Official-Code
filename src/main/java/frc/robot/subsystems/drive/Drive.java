@@ -328,6 +328,12 @@ public class Drive extends SubsystemBase {
     return gyroInputs.yawVelocityRadPerSec;
   }
 
+  /** Returns measured robot planar linear speed in meters/sec. */
+  public double getLinearSpeedMetersPerSec() {
+    ChassisSpeeds speeds = getChassisSpeeds();
+    return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+  }
+
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
