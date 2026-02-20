@@ -28,8 +28,8 @@ public class Turret extends SubsystemBase {
 
   private final AnalogInput m_pot = new AnalogInput(0);
 
-  private final int potmaxvalue = 4011;
-  private final int potminvalue = 430;
+  private final int potmaxvalue = 3483;
+  private final int potminvalue = 8;
   // middle of pot travel will be 2027
   // private final double gearboxreuction = 162 / 23;
   // CW and CCW are viewed from top of robot, turret 0 degrees will be facing rear of robot

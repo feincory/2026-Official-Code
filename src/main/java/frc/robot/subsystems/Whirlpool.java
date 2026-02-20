@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import static frc.robot.generated.TunerConstants.kCANBus;
 
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -15,7 +17,20 @@ public class Whirlpool extends SubsystemBase {
 
   private final TalonFX m_feeder = new TalonFX(24, kCANBus);
 
-  public Whirlpool() {}
+  public Whirlpool() {
+    TalonFXConfiguration whirlpoolconfig = new TalonFXConfiguration();
+    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .5;
+    whirlpoolconfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .5;
+
+    StatusCode status = StatusCode.StatusCodeNotInitialized;
+    for (int i = 0; i < 5; ++i) {
+      status = m_whirlpool.getConfigurator().apply(whirlpoolconfig);
+      if (status.isOK()) break;
+    }
+    if (!status.isOK()) {
+      System.out.println("Could not apply configs, error code: " + status.toString());
+    }
+  }
 
   @Override
   public void periodic() {
@@ -33,8 +48,8 @@ public class Whirlpool extends SubsystemBase {
   }
 
   public void reversewhirlpool() {
-    m_whirlpool.set(-.4);
-    m_feeder.set(-.4);
+    m_whirlpool.set(-1);
+    m_feeder.set(-1);
   }
 
   public void startfeeder() {

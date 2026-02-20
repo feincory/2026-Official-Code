@@ -117,8 +117,8 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
-    SmartDashboard.putNumber(kAimOffsetInchesKey, -20);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 0.0);
+    SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 0);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
@@ -257,12 +257,8 @@ public class RobotContainer {
     operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
     operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
-    flightcontroller.button(6).onTrue(new InstantCommand(whirlpool::startwhirlpool));
-    flightcontroller.button(6).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
-
-    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
-
-    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    flightcontroller.button(7).onTrue(new InstantCommand(shooter::reverseshooter));
+    flightcontroller.button(7).onFalse(new InstantCommand(shooter::stopshooter));
 
     operatorcontroller.povUp().onTrue(new InstantCommand(shooter::shooterhoodup));
     operatorcontroller.povUp().onFalse(new InstantCommand(shooter::stopshooterhood));
@@ -274,6 +270,17 @@ public class RobotContainer {
     operatorcontroller.start().onFalse(new InstantCommand(() -> shooter.setshooterhood(.25)));
 
     operatorcontroller.back().onTrue(new HomeShooterHood(shooter));
+
+    // whirlpool controls
+    flightcontroller.button(6).onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    flightcontroller.button(6).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    flightcontroller.button(7).onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+    flightcontroller.button(7).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
     // operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
 
     // turret controls
@@ -311,6 +318,9 @@ public class RobotContainer {
     operatorcontroller.rightBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
     operatorcontroller.leftBumper().onTrue(new InstantCommand(intake::manualintakeretract));
     operatorcontroller.leftBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
+    flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
+    flightcontroller.button(9).onTrue(new InstantCommand(intake::deployintake));
+    flightcontroller.button(8).onTrue(new InstantCommand(intake::midstopintake));
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 
@@ -352,9 +362,9 @@ public class RobotContainer {
   }
 
   private void runAutoAim(boolean autoShootEnabled) {
-    double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 0.0);
+    double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 0);
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
-    double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 0.0);
+    double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 0);
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
 
     Pose2d robotPose = drive.getPose();

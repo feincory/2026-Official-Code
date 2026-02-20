@@ -1,6 +1,6 @@
 {
-  "robotWidth": 0.9,
-  "robotLength": 0.9,
+  "robotWidth": 0.927,
+  "robotLength": 0.889,
   "holonomicMode": true,
   "pathFolders": [],
   "autoFolders": [],
@@ -8,14 +8,28 @@
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
+  "defaultNominalVoltage": 12.0,
   "robotMass": 74.088,
   "robotMOI": 6.883,
-  "robotWheelbase": 0.546,
   "robotTrackwidth": 0.546,
-  "driveWheelRadius": 0.048,
-  "driveGearing": 5.143,
-  "maxDriveSpeed": 5.45,
+  "driveWheelRadius": 0.051,
+  "driveGearing": 6.026,
+  "maxDriveSpeed": 5.12,
   "driveMotorType": "krakenX60FOC",
   "driveCurrentLimit": 60.0,
-  "wheelCOF": 1.2
+  "wheelCOF": 1.2,
+  "flModuleX": 0.307975,
+  "flModuleY": 0.2508,
+  "frModuleX": 0.308,
+  "frModuleY": -0.2508,
+  "blModuleX": -0.308,
+  "blModuleY": 0.251,
+  "brModuleX": -0.308,
+  "brModuleY": -0.251,
+  "bumperOffsetX": 0.0,
+  "bumperOffsetY": 0.0,
+  "robotFeatures": [
+    "{\"name\":\"InTook\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.55,\"y\":0.0},\"size\":{\"width\":0.686,\"length\":0.2286},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":true}}",
+    "{\"name\":\"Turshoot\",\"type\":\"circle\",\"data\":{\"center\":{\"x\":0.0,\"y\":0.2286},\"radius\":0.1524,\"strokeWidth\":0.02,\"filled\":false}}"
+  ]
 }

@@ -29,7 +29,8 @@ public final class Constants {
     REPLAY
   }
   // Intake Constants
-  public static double intakedeployposition = 10;
+  public static double intakedeployposition = 11.5;
+  public static double intakemidstopposition = 6;
   public static double intakeretractposition = 0;
   public static int kintakehomeswt = 0;
 
