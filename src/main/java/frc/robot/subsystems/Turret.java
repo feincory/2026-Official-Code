@@ -28,8 +28,8 @@ public class Turret extends SubsystemBase {
 
   private final AnalogInput m_pot = new AnalogInput(0);
 
-  private final int potmaxvalue = 3483;
-  private final int potminvalue = 8;
+  private final int potmaxvalue = 3700;
+  private final int potminvalue = 120;
   // middle of pot travel will be 2027
   // private final double gearboxreuction = 162 / 23;
   // CW and CCW are viewed from top of robot, turret 0 degrees will be facing rear of robot
@@ -57,9 +57,9 @@ public class Turret extends SubsystemBase {
     /* Configure Motion Magic */
     MotionMagicConfigs mm = cfg.MotionMagic;
     mm.withMotionMagicCruiseVelocity(
-            RotationsPerSecond.of(2)) // 5 (mechanism) rotations per second cruise
+            RotationsPerSecond.of(4)) // 5 (mechanism) rotations per second cruise
         .withMotionMagicAcceleration(
-            RotationsPerSecondPerSecond.of(5)) // Take approximately 0.5 seconds to reach max vel
+            RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
         // Take approximately 0.1 seconds to reach max accel
         .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(300));
 
@@ -67,7 +67,7 @@ public class Turret extends SubsystemBase {
     slot0.kS = 0.25; // Add 0.25 V output to overcome static friction
     slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
     slot0.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0.kP = 40; // A position error of 0.2 rotations results in 12 V output
+    slot0.kP = 55; // A position error of 0.2 rotations results in 12 V output
     slot0.kI = 0; // No output for integrated error
     slot0.kD = 0; // A velocity error of 1 rps results in 0.5 V output
 

@@ -117,8 +117,13 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
+    NamedCommands.registerCommand("Run Whirlpool", new InstantCommand(whirlpool::startwhirlpool));
+    NamedCommands.registerCommand("Stop Whirlpool", new InstantCommand(whirlpool::stopwhirlpool));
+    NamedCommands.registerCommand(
+        "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
+
     SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -16);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
@@ -359,6 +364,14 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  public Command getDisableStopCommand() {
+    return Commands.sequence(
+            new InstantCommand(shooter::stopshooter),
+            new InstantCommand(whirlpool::stopwhirlpool),
+            new InstantCommand(intake::stopintake))
+        .ignoringDisable(true);
   }
 
   private void runAutoAim(boolean autoShootEnabled) {

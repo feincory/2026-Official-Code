@@ -24,6 +24,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  */
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
+  private Command disableStopCommand;
+  private boolean disableStopCommandScheduled;
   private RobotContainer robotContainer;
 
   public Robot() {
@@ -91,11 +93,19 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    disableStopCommand = robotContainer.getDisableStopCommand();
+    disableStopCommandScheduled = false;
+  }
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    if (!disableStopCommandScheduled && disableStopCommand != null) {
+      CommandScheduler.getInstance().schedule(disableStopCommand);
+      disableStopCommandScheduled = true;
+    }
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
