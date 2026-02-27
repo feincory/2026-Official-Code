@@ -31,6 +31,7 @@ import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LEDLights;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Whirlpool;
@@ -82,7 +83,9 @@ public class RobotContainer {
   private final Climber climber = new Climber();
   private final Turret turret = new Turret();
   private final Intake intake = new Intake();
+  private final LEDLights lights = new LEDLights();
   private final Vision vision;
+
   // +X forward, +Y left. Replace with measured turret center offset from robot center.
   private static final Translation2d kTurretOffsetFromRobotCenterMeters =
       new Translation2d(-0.0889, .1461);
@@ -122,8 +125,8 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
 
-    SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -16);
+    SmartDashboard.putNumber(kAimOffsetInchesKey, -20);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -24);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
@@ -236,8 +239,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -flightcontroller.getRawAxis(1),
-            () -> flightcontroller.getRawAxis(0),
+            () -> flightcontroller.getRawAxis(1),
+            () -> -flightcontroller.getRawAxis(0),
             () -> -flightcontroller.getRawAxis(3)));
     // Lock to 0° when A button is held
     // controller
@@ -277,8 +280,8 @@ public class RobotContainer {
     operatorcontroller.back().onTrue(new HomeShooterHood(shooter));
 
     // whirlpool controls
-    flightcontroller.button(6).onTrue(new InstantCommand(whirlpool::startwhirlpool));
-    flightcontroller.button(6).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    flightcontroller.button(13).onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    flightcontroller.button(13).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     flightcontroller.button(7).onTrue(new InstantCommand(whirlpool::reversewhirlpool));
     flightcontroller.button(7).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
@@ -329,8 +332,8 @@ public class RobotContainer {
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 
-    flightcontroller.button(13).onTrue(new InstantCommand(intake::runintake));
-    flightcontroller.button(13).onFalse(new InstantCommand(intake::stopintake));
+    flightcontroller.button(2).onTrue(new InstantCommand(intake::runintake));
+    flightcontroller.button(2).onFalse(new InstantCommand(intake::stopintake));
     // operatorcontroller
     //     .leftTrigger()
     //     .onTrue(
