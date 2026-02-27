@@ -377,6 +377,10 @@ public class RobotContainer {
         .ignoringDisable(true);
   }
 
+  public void onTeleopInit() {
+    lights.onTeleopInit();
+  }
+
   private void runAutoAim(boolean autoShootEnabled) {
     double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 0);
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
