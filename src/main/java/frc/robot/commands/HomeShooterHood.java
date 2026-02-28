@@ -38,12 +38,7 @@ public class HomeShooterHood extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (false /*homeSwitch.get()*/) { // Switch is triggered (active low)
-      shooter.setshooterhoodpower(0);
-      shooter.resetencoder(); // Set position to zero
-    } else {
-      shooter.setshooterhoodpower(HOMING_SPEED);
-    }
+    shooter.setshooterhoodpower(HOMING_SPEED);
   }
 
   // Called once the command ends or is interrupted.

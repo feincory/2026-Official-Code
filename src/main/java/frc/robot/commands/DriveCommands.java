@@ -96,6 +96,23 @@ public class DriveCommands {
         drive);
   }
 
+  /** Robot relative drive command using direct chassis speeds. */
+  public static Command robotRelativeDrive(
+      Drive drive,
+      DoubleSupplier xSpeedSupplier,
+      DoubleSupplier ySpeedSupplier,
+      DoubleSupplier omegaSupplier) {
+    return Commands.run(
+            () ->
+                drive.runVelocity(
+                    new ChassisSpeeds(
+                        xSpeedSupplier.getAsDouble(),
+                        ySpeedSupplier.getAsDouble(),
+                        omegaSupplier.getAsDouble())),
+            drive)
+        .finallyDo(drive::stop);
+  }
+
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling

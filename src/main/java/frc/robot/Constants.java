@@ -39,6 +39,7 @@ public final class Constants {
 
   // Climber Constants
   public static double climbspeed = .5;
+  public static double climbDriveSpeedMetersPerSec = 0.5;
 
   // turret constants
   public static int potanalogport = 0;
