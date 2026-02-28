@@ -19,7 +19,7 @@ public class Whirlpool extends SubsystemBase {
 
   public Whirlpool() {
     TalonFXConfiguration whirlpoolconfig = new TalonFXConfiguration();
-    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .5;
+    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .75;
     whirlpoolconfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .5;
 
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -39,7 +39,7 @@ public class Whirlpool extends SubsystemBase {
 
   public void startwhirlpool() {
     m_whirlpool.set(.6);
-    m_feeder.set(1);
+    m_feeder.set(.8);
   }
 
   public void stopwhirlpool() {

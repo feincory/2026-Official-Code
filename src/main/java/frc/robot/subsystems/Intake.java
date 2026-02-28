@@ -17,6 +17,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
@@ -52,9 +53,18 @@ public class Intake extends SubsystemBase {
     slot0.kI = 0; // No output for integrated error
     slot0.kD = 0.5; // A velocity error of 1 rps results in 0.5 V output
 
+    TalonFXConfiguration spinnerCfg = new TalonFXConfiguration();
+
+    spinnerCfg.CurrentLimits.SupplyCurrentLimit = 35;
+    spinnerCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+    spinnerCfg.CurrentLimits.StatorCurrentLimit = 35;
+    spinnerCfg.CurrentLimits.StatorCurrentLimitEnable = true;
+
     StatusCode status = StatusCode.StatusCodeNotInitialized;
     for (int i = 0; i < 5; ++i) {
       status = m_extender.getConfigurator().apply(extendercfg);
+      status = m_spinner.getConfigurator().apply(spinnerCfg);
       if (status.isOK()) break;
     }
     if (!status.isOK()) {
@@ -66,10 +76,12 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    SmartDashboard.putNumber("Spinner Temp", m_spinner.getDeviceTemp().getValueAsDouble());
+    SmartDashboard.putNumber("Spinner TCurrent", m_spinner.getStatorCurrent().getValueAsDouble());
   }
 
   public void runintake() {
-    m_spinner.set(-.90);
+    m_spinner.set(-.75);
   }
 
   public void stopintake() {

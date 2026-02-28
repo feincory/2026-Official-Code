@@ -71,7 +71,7 @@ public class RobotContainer {
   private static final String kBluePassTopYKey = "AutoAim/BluePassTopY";
   private static final double kFieldLengthMeters = 16.541;
   private static final double kZoneSplitYDefaultMeters = 4.0;
-  private static final double kOwnZoneMaxXDefaultMeters = 4.0;
+  private static final double kOwnZoneMaxXDefaultMeters = 4.25;
   private static final double kTurretReadyToleranceDegDefault = 3.0;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
   private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.35;
@@ -125,7 +125,7 @@ public class RobotContainer {
         "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
 
     SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -16);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -30);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
@@ -238,8 +238,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -flightcontroller.getRawAxis(1),
-            () -> flightcontroller.getRawAxis(0),
+            () -> flightcontroller.getRawAxis(1),
+            () -> -flightcontroller.getRawAxis(0),
             () -> -flightcontroller.getRawAxis(3)));
     // Lock to 0° when A button is held
     // controller

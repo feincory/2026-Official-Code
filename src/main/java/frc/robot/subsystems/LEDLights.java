@@ -27,7 +27,7 @@ public class LEDLights extends SubsystemBase {
   private static final double kShift4End = 30.0;
 
   private static final double kTeleopGameDataReadyTime = 136.0;
-  private static final double kWarningSeconds = 5.0;
+  private static final double kWarningSeconds = 10.0;
   private static final double kEndgameWarningStart = 20.0;
   private static final double kEndgameStart = 15.0;
 
