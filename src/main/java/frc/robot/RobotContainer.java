@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.HomeIntake;
 import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -238,15 +239,16 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> flightcontroller.getRawAxis(1),
-            () -> -flightcontroller.getRawAxis(0),
+            () -> -flightcontroller.getRawAxis(1),
+            () -> flightcontroller.getRawAxis(0),
             () -> -flightcontroller.getRawAxis(3)));
     // Lock to 0° when A button is held
     // controller
     //     .a()
     //     .whileTrue(
     //         DriveCommands.joystickDriveAtAngle(
-    //             drive,
+    //             drive,[\]\[]
+
     //             () -> -controller.getLeftY(),
     //             () -> -controller.getLeftX(),
     //             () -> Rotation2d.kZero));
@@ -338,9 +340,12 @@ public class RobotContainer {
     operatorcontroller.rightBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
     operatorcontroller.leftBumper().onTrue(new InstantCommand(intake::manualintakeretract));
     operatorcontroller.leftBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
-    flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
+    // flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
     flightcontroller.button(9).onTrue(new InstantCommand(intake::deployintake));
     flightcontroller.button(8).onTrue(new InstantCommand(intake::midstopintake));
+    flightcontroller.button(9).onTrue(new InstantCommand(intake::runintake));
+    flightcontroller.button(8).onTrue(new InstantCommand(intake::runintake));
+    flightcontroller.button(15).onTrue(new HomeIntake(intake));
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 

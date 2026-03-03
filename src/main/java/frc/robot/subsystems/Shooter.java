@@ -22,10 +22,14 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
+  private static final double kHoodMinPosition = 0.0;
+  private static final double kHoodMaxPosition = 1.0;
+
   /** Creates a new Shooter. */
   private final TalonFX m_shooter = new TalonFX(36, "rio");
 
@@ -143,7 +147,8 @@ public class Shooter extends SubsystemBase {
   }
 
   public void setshooterhood(double position) {
-    m_hoodtiltmtr.setControl(mmhood.withPosition(position).withSlot(0));
+    double clampedPosition = MathUtil.clamp(position, kHoodMinPosition, kHoodMaxPosition);
+    m_hoodtiltmtr.setControl(mmhood.withPosition(clampedPosition).withSlot(0));
   }
 
   public void resethood() {

@@ -8,6 +8,7 @@ import static frc.robot.Constants.kintakehomeswt;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Intake;
 
@@ -17,7 +18,7 @@ public class HomeIntake extends Command {
   private final Intake intake;
 
   private final DigitalInput homeSwitch;
-  private static final double HOMING_SPEED = 0.1; // Slow descent
+  private static final double HOMING_SPEED = -0.08; // Slow descent
   private static final double TIMEOUT = 5.0; // Stop after 3 seconds
   private Timer timer = new Timer();
 
@@ -33,12 +34,22 @@ public class HomeIntake extends Command {
   public void initialize() {
     timer.reset();
     timer.start();
+    SmartDashboard.putBoolean("Intake/HomeSwitchRaw", homeSwitch.get());
+    SmartDashboard.putBoolean("Intake/HomeSwitchTriggered", !homeSwitch.get());
+    SmartDashboard.putBoolean("Intake/HomingComplete", false);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (homeSwitch.get()) { // Switch is triggered (active low)
+    boolean switchRaw = homeSwitch.get();
+    boolean switchTriggered = !switchRaw;
+
+    SmartDashboard.putBoolean("Intake/HomeSwitchRaw", switchRaw);
+    SmartDashboard.putBoolean("Intake/HomeSwitchTriggered", switchTriggered);
+    SmartDashboard.putBoolean("Intake/HomingTimedOut", timer.hasElapsed(TIMEOUT));
+
+    if (switchTriggered) { // Switch is triggered (active low)
       intake.setintakepower(0);
       intake.resetencoder(); // Set position to zero
     } else {
@@ -50,6 +61,12 @@ public class HomeIntake extends Command {
   @Override
   public void end(boolean interrupted) {
     intake.setintakepower(0);
+    SmartDashboard.putBoolean("Intake/HomeSwitchRaw", homeSwitch.get());
+    SmartDashboard.putBoolean("Intake/HomeSwitchTriggered", !homeSwitch.get());
+    SmartDashboard.putBoolean(
+        "Intake/HomingComplete", !interrupted && !timer.hasElapsed(TIMEOUT) && !homeSwitch.get());
+    SmartDashboard.putBoolean("Intake/HomingTimedOut", timer.hasElapsed(TIMEOUT));
+    SmartDashboard.putBoolean("Intake/HomingInterrupted", interrupted);
 
     if (timer.hasElapsed(TIMEOUT)) {
       System.out.println("ERROR: Intake homing failed! Sensor not detected.");
@@ -61,6 +78,6 @@ public class HomeIntake extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return homeSwitch.get() || timer.hasElapsed(TIMEOUT);
+    return !homeSwitch.get() || timer.hasElapsed(TIMEOUT);
   }
 }
