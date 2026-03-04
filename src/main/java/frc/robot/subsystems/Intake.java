@@ -17,15 +17,21 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
+  private static final String kOscillationFrequencyHzKey = "Intake/OscillationFrequencyHz";
+
   /** Creates a new Intake. */
   private final TalonFX m_spinner = new TalonFX(28, kCANBus);
 
   private final TalonFX m_extender = new TalonFX(22, kCANBus);
   private final MotionMagicVoltage m_mmReq = new MotionMagicVoltage(0);
+  private final Timer m_oscillationTimer = new Timer();
+
+  private boolean m_oscillating = false;
 
   static boolean intakehomed;
 
@@ -71,17 +77,32 @@ public class Intake extends SubsystemBase {
       System.out.println("Could not configure device. Error: " + status.toString());
     }
     intakehomed = false;
+    SmartDashboard.putNumber(kOscillationFrequencyHzKey, intakeOscillationFrequencyHz);
+    SmartDashboard.putBoolean("Intake/Oscillating", false);
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (m_oscillating) {
+      double frequencyHz =
+          Math.max(
+              0.0,
+              SmartDashboard.getNumber(kOscillationFrequencyHzKey, intakeOscillationFrequencyHz));
+      double phase = (m_oscillationTimer.get() * frequencyHz) % 1.0;
+      if (frequencyHz > 0.0 && phase < 0.5) {
+        setExtenderPosition(intakedeployposition);
+      } else {
+        setExtenderPosition(intakemidstopposition);
+      }
+    }
+
     SmartDashboard.putNumber("Spinner Temp", m_spinner.getDeviceTemp().getValueAsDouble());
     SmartDashboard.putNumber("Spinner TCurrent", m_spinner.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putBoolean("Intake/Oscillating", m_oscillating);
   }
 
   public void runintake() {
-    m_spinner.set(-.85);
+    m_spinner.set(-.70);
   }
 
   public void stopintake() {
@@ -90,27 +111,43 @@ public class Intake extends SubsystemBase {
 
   // manual controls
   public void manualintakedeploy() {
+    disableOscillation();
     m_extender.set(.3);
   }
 
   public void manualintakeretract() {
+    disableOscillation();
     m_extender.set(-.3);
   }
 
   public void manualstopdeploy() {
+    disableOscillation();
     m_extender.set(0);
   }
 
   public void deployintake() {
+    disableOscillation();
     setExtenderPosition(intakedeployposition);
   }
 
   public void midstopintake() {
+    disableOscillation();
     setExtenderPosition(intakemidstopposition);
   }
 
   public void retractintake() {
+    disableOscillation();
     setExtenderPosition(intakeretractposition);
+  }
+
+  public void startOscillation() {
+    m_oscillating = true;
+    m_oscillationTimer.restart();
+  }
+
+  public void stopOscillation() {
+    disableOscillation();
+    setExtenderPosition(intakedeployposition);
   }
 
   // homing commands
@@ -120,11 +157,18 @@ public class Intake extends SubsystemBase {
   }
 
   public void setintakepower(double power) {
+    disableOscillation();
     m_extender.set(power);
   }
 
   public void setintakestop() {
+    disableOscillation();
     m_extender.set(0);
+  }
+
+  private void disableOscillation() {
+    m_oscillating = false;
+    m_oscillationTimer.stop();
   }
 
   private void setExtenderPosition(double position) {

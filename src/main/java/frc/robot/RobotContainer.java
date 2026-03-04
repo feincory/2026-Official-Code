@@ -263,8 +263,8 @@ public class RobotContainer {
     operatorcontroller.x().onTrue(new InstantCommand(() -> shooter.shootersetvelocity(30)));
     operatorcontroller.x().onFalse(new InstantCommand(shooter::stopshooter));
 
-    operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
-    operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    // operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    // operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     flightcontroller.button(7).onTrue(new InstantCommand(shooter::reverseshooter));
     flightcontroller.button(7).onFalse(new InstantCommand(shooter::stopshooter));
@@ -287,8 +287,8 @@ public class RobotContainer {
     flightcontroller.button(7).onTrue(new InstantCommand(whirlpool::reversewhirlpool));
     flightcontroller.button(7).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
-    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
-    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    // operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
+    // operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     // operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
 
@@ -300,6 +300,13 @@ public class RobotContainer {
     operatorcontroller.povLeft().onFalse(new InstantCommand(turret::stop));
 
     // CLIMBER CONTROLER
+
+    operatorcontroller.a().onTrue(new InstantCommand(climber::startclimber));
+    operatorcontroller.a().onFalse(new InstantCommand(climber::stopclimber));
+
+    operatorcontroller.b().onTrue(new InstantCommand(climber::reverseclimber));
+    operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
+
     operatorcontroller
         .leftStick()
         .whileTrue(
@@ -342,9 +349,17 @@ public class RobotContainer {
     operatorcontroller.leftBumper().onFalse(new InstantCommand(intake::manualstopdeploy));
     // flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
     flightcontroller.button(9).onTrue(new InstantCommand(intake::deployintake));
-    flightcontroller.button(8).onTrue(new InstantCommand(intake::midstopintake));
+    flightcontroller.button(8).onTrue(new InstantCommand(intake::retractintake));
+
+    flightcontroller.button(8).onFalse(new InstantCommand(intake::midstopintake));
+
+    flightcontroller.button(9).onFalse(new InstantCommand(intake::midstopintake));
+    flightcontroller.button(8).onFalse(new InstantCommand(intake::runintake));
+    flightcontroller.button(9).onFalse(new InstantCommand(intake::runintake));
     flightcontroller.button(9).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(8).onTrue(new InstantCommand(intake::runintake));
+    flightcontroller.button(3).onTrue(new InstantCommand(intake::startOscillation));
+    flightcontroller.button(3).onFalse(new InstantCommand(intake::stopOscillation));
     flightcontroller.button(15).onTrue(new HomeIntake(intake));
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
