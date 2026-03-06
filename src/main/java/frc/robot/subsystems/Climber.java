@@ -45,6 +45,14 @@ public class Climber extends SubsystemBase {
     m_climber.set(-.5);
   }
 
+  public void slowstartclimber() {
+    m_climber.set(.3);
+  }
+
+  public void slowreverseclimber() {
+    m_climber.set(-.15);
+  }
+
   public void stopclimber() {
     m_climber.set(0);
   }

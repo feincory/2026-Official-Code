@@ -96,9 +96,9 @@ public class RobotContainer {
   private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(4.629, 4.03);
   private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
   private static final Translation2d kBluePassTargetBottomDefaultFieldMeters =
-      new Translation2d(2.0, 2.0);
+      new Translation2d(4.0, 3.0);
   private static final Translation2d kBluePassTargetTopDefaultFieldMeters =
-      new Translation2d(2.0, 6);
+      new Translation2d(4.0, 5.5);
 
   private final ShooterCalc shooterCalc =
       new ShooterCalc(
@@ -239,8 +239,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -flightcontroller.getRawAxis(1),
-            () -> flightcontroller.getRawAxis(0),
+            () -> flightcontroller.getRawAxis(1),
+            () -> -flightcontroller.getRawAxis(0),
             () -> -flightcontroller.getRawAxis(3)));
     // Lock to 0° when A button is held
     // controller
@@ -301,10 +301,10 @@ public class RobotContainer {
 
     // CLIMBER CONTROLER
 
-    operatorcontroller.a().onTrue(new InstantCommand(climber::startclimber));
+    operatorcontroller.a().onTrue(new InstantCommand(climber::slowstartclimber));
     operatorcontroller.a().onFalse(new InstantCommand(climber::stopclimber));
 
-    operatorcontroller.b().onTrue(new InstantCommand(climber::reverseclimber));
+    operatorcontroller.b().onTrue(new InstantCommand(climber::slowreverseclimber));
     operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
 
     operatorcontroller
@@ -359,6 +359,8 @@ public class RobotContainer {
     flightcontroller.button(9).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(8).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(3).onTrue(new InstantCommand(intake::startOscillation));
+    flightcontroller.button(3).onTrue(new InstantCommand(intake::runintake));
+    // flightcontroller.button(3).onFalse(new InstantCommand(intake::stopintake));
     flightcontroller.button(3).onFalse(new InstantCommand(intake::stopOscillation));
     flightcontroller.button(15).onTrue(new HomeIntake(intake));
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));

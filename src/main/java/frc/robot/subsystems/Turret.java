@@ -137,11 +137,11 @@ public class Turret extends SubsystemBase {
   }
 
   public void manright() {
-    m_turret.set(-.2);
+    m_turret.set(-.075);
   }
 
   public void manleft() {
-    m_turret.set(.2);
+    m_turret.set(.075);
   }
 
   public void stop() {
