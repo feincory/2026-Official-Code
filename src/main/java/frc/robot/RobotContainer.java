@@ -27,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.HomeIntake;
 import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -75,7 +74,7 @@ public class RobotContainer {
   private static final double kOwnZoneMaxXDefaultMeters = 4.25;
   private static final double kTurretReadyToleranceDegDefault = 3.0;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
-  private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.35;
+  private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
 
   // Subsystems
   private final Drive drive;
@@ -96,9 +95,9 @@ public class RobotContainer {
   private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(4.629, 4.03);
   private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
   private static final Translation2d kBluePassTargetBottomDefaultFieldMeters =
-      new Translation2d(4.0, 3.0);
+      new Translation2d(3.5, 1.5);
   private static final Translation2d kBluePassTargetTopDefaultFieldMeters =
-      new Translation2d(4.0, 5.5);
+      new Translation2d(3.5, 5.7);
 
   private final ShooterCalc shooterCalc =
       new ShooterCalc(
@@ -126,7 +125,7 @@ public class RobotContainer {
         "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
 
     SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -30);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 10);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
@@ -260,11 +259,22 @@ public class RobotContainer {
     operatorcontroller.y().onTrue(new InstantCommand(shooter::runshooter));
     operatorcontroller.y().onFalse(new InstantCommand(shooter::stopshooter));
 
-    operatorcontroller.x().onTrue(new InstantCommand(() -> shooter.shootersetvelocity(30)));
+    operatorcontroller
+        .x()
+        .onTrue(
+            new InstantCommand(
+                () -> shooter.setshooterhood(SmartDashboard.getNumber("Hood Position", 0))));
     operatorcontroller.x().onFalse(new InstantCommand(shooter::stopshooter));
 
-    // operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
-    // operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    operatorcontroller
+        .x()
+        .onTrue(
+            new InstantCommand(
+                () -> shooter.shootersetvelocity(SmartDashboard.getNumber("Shooter RPS", 30.0))));
+    operatorcontroller.x().onFalse(new InstantCommand(shooter::stopshooter));
+
+    operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     flightcontroller.button(7).onTrue(new InstantCommand(shooter::reverseshooter));
     flightcontroller.button(7).onFalse(new InstantCommand(shooter::stopshooter));
@@ -287,10 +297,8 @@ public class RobotContainer {
     flightcontroller.button(7).onTrue(new InstantCommand(whirlpool::reversewhirlpool));
     flightcontroller.button(7).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
-    // operatorcontroller.b().onTrue(new InstantCommand(whirlpool::reversewhirlpool));
-    // operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
-
-    // operatorcontroller.back().onTrue(new InstantCommand(() -> shooter.stophood()));
+    operatorcontroller.b().onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     // turret controls
     operatorcontroller.povRight().onTrue(new InstantCommand(turret::manleft));
@@ -301,11 +309,11 @@ public class RobotContainer {
 
     // CLIMBER CONTROLER
 
-    operatorcontroller.a().onTrue(new InstantCommand(climber::slowstartclimber));
-    operatorcontroller.a().onFalse(new InstantCommand(climber::stopclimber));
+    // operatorcontroller.a().onTrue(new InstantCommand(climber::slowstartclimber));
+    // operatorcontroller.a().onFalse(new InstantCommand(climber::stopclimber));
 
-    operatorcontroller.b().onTrue(new InstantCommand(climber::slowreverseclimber));
-    operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
+    // operatorcontroller.b().onTrue(new InstantCommand(climber::slowreverseclimber));
+    // operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
 
     operatorcontroller
         .leftStick()
@@ -362,7 +370,7 @@ public class RobotContainer {
     flightcontroller.button(3).onTrue(new InstantCommand(intake::runintake));
     // flightcontroller.button(3).onFalse(new InstantCommand(intake::stopintake));
     flightcontroller.button(3).onFalse(new InstantCommand(intake::stopOscillation));
-    flightcontroller.button(15).onTrue(new HomeIntake(intake));
+    flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
     // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
     // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 
@@ -416,9 +424,9 @@ public class RobotContainer {
   }
 
   private void runAutoAim(boolean autoShootEnabled) {
-    double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 0);
+    double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 6);
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
-    double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 0);
+    double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 10);
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
 
     Pose2d robotPose = drive.getPose();
@@ -527,33 +535,35 @@ public class RobotContainer {
 
   private static NavigableMap<Double, Double> buildShooterRpsTable() {
     NavigableMap<Double, Double> table = new TreeMap<>();
-    table.put(0.889, 28.0);
-    table.put(1.2954, 30.0);
-    table.put(1.778, 30.0);
-    table.put(2.54, 32.0);
-    table.put(2.794, 35.0);
-    table.put(3.556, 37.0);
-    table.put(4.704, 40.0);
-    table.put(4.7244, 43.0);
-    table.put(5.3848, 43.0);
-    table.put(7.1374, 50.0);
-    table.put(9.9568, 75.0);
+    table.put(1.565, 26.0);
+    table.put(2.014, 28.0);
+    table.put(2.455, 29.0);
+    table.put(2.971, 31.0);
+    table.put(3.581, 35.0);
+    table.put(4.1, 37.0);
+    table.put(4.5, 40.0);
+    table.put(4.96, 42.0);
+    table.put(5.391, 44.0); // was 43
+    table.put(5.500, 45.0);
+    table.put(6.287, 50.0);
+    table.put(12.5, 80.0);
     return table;
   }
 
   private static NavigableMap<Double, Double> buildHoodPercentTable() {
     NavigableMap<Double, Double> table = new TreeMap<>();
-    table.put(0.889, 0.0);
-    table.put(1.2954, 0.05);
-    table.put(1.778, 0.25);
-    table.put(2.54, 0.3);
-    table.put(2.794, 0.3);
-    table.put(3.556, 0.3);
-    table.put(4.4704, 0.37);
-    table.put(4.7244, 0.38);
-    table.put(5.3848, 0.48);
-    table.put(7.1374, 0.51);
-    table.put(9.9568, 1.0);
+    table.put(1.565, 0.0);
+    table.put(2.014, 0.05);
+    table.put(2.455, 0.09);
+    table.put(2.971, 0.12);
+    table.put(3.581, 0.16);
+    table.put(4.1, 0.19);
+    table.put(4.5, 0.21);
+    table.put(4.96, 0.23);
+    table.put(5.391, 0.27);
+    table.put(5.500, .28);
+    table.put(6.287, 0.70);
+    table.put(12.5, 0.75);
     return table;
   }
 }

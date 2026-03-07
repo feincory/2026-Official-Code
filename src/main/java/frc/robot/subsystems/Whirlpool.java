@@ -9,6 +9,7 @@ import static frc.robot.generated.TunerConstants.kCANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Whirlpool extends SubsystemBase {
@@ -21,7 +22,7 @@ public class Whirlpool extends SubsystemBase {
     TalonFXConfiguration whirlpoolconfig = new TalonFXConfiguration();
     whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .75;
     whirlpoolconfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .5;
-
+    SmartDashboard.putNumber("Whirlpool Speed", 0);
     StatusCode status = StatusCode.StatusCodeNotInitialized;
     for (int i = 0; i < 5; ++i) {
       status = m_whirlpool.getConfigurator().apply(whirlpoolconfig);
@@ -38,7 +39,7 @@ public class Whirlpool extends SubsystemBase {
   }
 
   public void startwhirlpool() {
-    m_whirlpool.set(.6);
+    m_whirlpool.set(SmartDashboard.getNumber("Whirlpool Speed", .6));
     m_feeder.set(.8);
   }
 

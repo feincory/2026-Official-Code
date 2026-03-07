@@ -112,12 +112,12 @@ public class Intake extends SubsystemBase {
   // manual controls
   public void manualintakedeploy() {
     disableOscillation();
-    m_extender.set(.3);
+    m_extender.set(.2);
   }
 
   public void manualintakeretract() {
     disableOscillation();
-    m_extender.set(-.3);
+    m_extender.set(-.2);
   }
 
   public void manualstopdeploy() {

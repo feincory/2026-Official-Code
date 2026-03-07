@@ -9,8 +9,8 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 public class ShooterCalc {
-  private double lateralAimOffsetMeters = 0;
-  private double distanceOffsetMeters = 0;
+  private double lateralAimOffsetMeters = 6;
+  private double distanceOffsetMeters = 10;
 
   /** Result for one auto-aim/auto-shot calculation. */
   public static class ShotSolution {
