@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HomeShooterHood;
@@ -97,6 +98,8 @@ public class RobotContainer {
   private static final double kMovingShotDriverMaxLinearScaleDefault = 0.4;
   private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.25;
   private static final double kMovingShotTargetLeadSecondsDefault = 0.18;
+  private static final double kAimOffsetAdjustStepInches = 4.0;
+  private static final double kAimOffsetStickThreshold = 0.9;
 
   // Subsystems
   private final Drive drive;
@@ -346,13 +349,15 @@ public class RobotContainer {
     operatorcontroller.povLeft().onTrue(new InstantCommand(turret::manright));
     operatorcontroller.povLeft().onFalse(new InstantCommand(turret::stop));
 
-    // CLIMBER CONTROLER
+    new Trigger(() -> operatorcontroller.getLeftY() <= -kAimOffsetStickThreshold)
+        .onTrue(new InstantCommand(() -> adjustDistanceOffsetsInches(kAimOffsetAdjustStepInches)));
 
-    // operatorcontroller.a().onTrue(new InstantCommand(climber::slowstartclimber));
-    // operatorcontroller.a().onFalse(new InstantCommand(climber::stopclimber));
-
-    // operatorcontroller.b().onTrue(new InstantCommand(climber::slowreverseclimber));
-    // operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
+    new Trigger(() -> operatorcontroller.getLeftY() >= kAimOffsetStickThreshold)
+        .onTrue(new InstantCommand(() -> adjustDistanceOffsetsInches(-kAimOffsetAdjustStepInches)));
+    new Trigger(() -> operatorcontroller.getLeftX() >= kAimOffsetStickThreshold)
+        .onTrue(new InstantCommand(() -> adjustLateralOffsetsInches(-kAimOffsetAdjustStepInches)));
+    new Trigger(() -> operatorcontroller.getLeftX() <= -kAimOffsetStickThreshold)
+        .onTrue(new InstantCommand(() -> adjustLateralOffsetsInches(kAimOffsetAdjustStepInches)));
 
     // Hold button 4 for normal auto-aim (turret + shooter + hood only).
     flightcontroller.button(4).whileTrue(Commands.run(() -> runAutoAim(false), turret, shooter));
@@ -363,7 +368,7 @@ public class RobotContainer {
         .whileTrue(Commands.run(() -> runAutoAim(true), turret, shooter, whirlpool));
 
     flightcontroller
-        .button(6)
+        .button(12)
         .whileTrue(Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool));
 
     flightcontroller.button(4).onFalse(new InstantCommand(shooter::stopshooter));
@@ -374,7 +379,7 @@ public class RobotContainer {
                 new InstantCommand(shooter::stopshooter),
                 new InstantCommand(whirlpool::stopwhirlpool)));
     flightcontroller
-        .button(6)
+        .button(12)
         .onFalse(
             Commands.sequence(
                 new InstantCommand(shooter::stopshooter),
@@ -389,36 +394,20 @@ public class RobotContainer {
     flightcontroller.button(9).onTrue(new InstantCommand(intake::deployintake));
     flightcontroller.button(8).onTrue(new InstantCommand(intake::retractintake));
 
-    flightcontroller.button(8).onFalse(new InstantCommand(intake::midstopintake));
+    // flightcontroller.button(8).onFalse(new InstantCommand(intake::midstopintake));
 
-    flightcontroller.button(9).onFalse(new InstantCommand(intake::midstopintake));
-    flightcontroller.button(8).onFalse(new InstantCommand(intake::runintake));
-    flightcontroller.button(9).onFalse(new InstantCommand(intake::runintake));
+    // flightcontroller.button(9).onFalse(new InstantCommand(intake::midstopintake));
+    // flightcontroller.button(8).onFalse(new InstantCommand(intake::runintake));
+    // flightcontroller.button(9).onFalse(new InstantCommand(intake::runintake));
     flightcontroller.button(9).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(8).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(3).onTrue(new InstantCommand(intake::startOscillation));
     flightcontroller.button(3).onTrue(new InstantCommand(intake::runintake));
-    // flightcontroller.button(3).onFalse(new InstantCommand(intake::stopintake));
     flightcontroller.button(3).onFalse(new InstantCommand(intake::stopOscillation));
     flightcontroller.button(15).onTrue(new InstantCommand(intake::resetencoder));
-    // operatorcontroller.leftStick().onTrue(new InstantCommand(intake::runintake));
-    // operatorcontroller.leftStick().onFalse(new InstantCommand(intake::stopintake));
 
     flightcontroller.button(2).onTrue(new InstantCommand(intake::runintake));
     flightcontroller.button(2).onFalse(new InstantCommand(intake::stopintake));
-    // operatorcontroller
-    //     .leftTrigger()
-    //     .onTrue(
-    //         Commands.sequence(
-    //             new InstantCommand(whirlpool::startfeeder),
-    //             new WaitCommand(2),
-    //             new InstantCommand(whirlpool::startwhirlpool)));
-
-    // operatorcontroller.leftTrigger().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
-
-    // operatorcontroller
-    //     .povDown()
-    //     .onTrue(Command.runonce(shooterCalc.getDistanceToGoal, ShooterCalc));
 
     // Reset gyro to 0° when B button is pressed
     flightcontroller
@@ -593,7 +582,7 @@ public class RobotContainer {
   }
 
   private double getMovingShotDriveLinearScale() {
-    if (!flightcontroller.getHID().getRawButton(6)) {
+    if (!flightcontroller.getHID().getRawButton(12)) {
       return 1.0;
     }
     double maxAllowedSpeedMps =
@@ -607,11 +596,25 @@ public class RobotContainer {
   }
 
   private double getMovingShotDriveOmegaScale() {
-    if (!flightcontroller.getHID().getRawButton(6)) {
+    if (!flightcontroller.getHID().getRawButton(12)) {
       return 1.0;
     }
     return SmartDashboard.getNumber(
         kMovingShotDriverMaxOmegaScaleKey, kMovingShotDriverMaxOmegaScaleDefault);
+  }
+
+  private void adjustDistanceOffsetsInches(double deltaInches) {
+    adjustDashboardNumber(kDistanceOffsetInchesKey, deltaInches);
+    adjustDashboardNumber(kMovingShotDistanceOffsetInchesKey, deltaInches);
+  }
+
+  private void adjustLateralOffsetsInches(double deltaInches) {
+    adjustDashboardNumber(kAimOffsetInchesKey, deltaInches);
+    adjustDashboardNumber(kMovingShotLateralOffsetInchesKey, deltaInches);
+  }
+
+  private void adjustDashboardNumber(String key, double delta) {
+    SmartDashboard.putNumber(key, SmartDashboard.getNumber(key, 0.0) + delta);
   }
 
   private Translation2d getCurrentAllianceAimTarget(Pose2d robotPose) {
