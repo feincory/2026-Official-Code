@@ -334,6 +334,15 @@ public class Drive extends SubsystemBase {
     return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
   }
 
+  /** Returns measured field-relative planar velocity in meters/sec. */
+  public Translation2d getFieldRelativeVelocityMetersPerSec() {
+    ChassisSpeeds robotRelativeSpeeds = getChassisSpeeds();
+    ChassisSpeeds fieldRelativeSpeeds =
+        ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, getRotation());
+    return new Translation2d(
+        fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
+  }
+
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);

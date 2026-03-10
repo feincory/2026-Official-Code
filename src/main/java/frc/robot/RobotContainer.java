@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDLights;
 import frc.robot.subsystems.Shooter;
@@ -56,6 +55,25 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private static final String kMovingShotLateralOffsetInchesKey = "MovingShot/LateralOffsetInches";
+  private static final String kMovingShotDistanceOffsetInchesKey =
+      "MovingShot/DistanceOffsetInches";
+  private static final String kMovingShotTurretRotationLeadSecondsKey =
+      "MovingShot/TurretRotationLeadSec";
+  private static final String kMovingShotTurretRotationCompScaleKey =
+      "MovingShot/TurretRotationCompScale";
+  private static final String kMovingShotTurretReadyToleranceDegKey =
+      "MovingShot/TurretReadyToleranceDeg";
+  private static final String kMovingShotShooterReadyToleranceRpsKey =
+      "MovingShot/ShooterReadyToleranceRps";
+  private static final String kMovingShotAutoShootMaxRobotSpeedMpsKey =
+      "MovingShot/AutoShootMaxRobotSpeedMps";
+  private static final String kMovingShotDriverMaxLinearScaleKey =
+      "MovingShot/DriverMaxLinearScale";
+  private static final String kMovingShotDriverMaxOmegaScaleKey = "MovingShot/DriverMaxOmegaScale";
+  private static final String kMovingShotTargetLeadSecondsKey = "MovingShot/TargetLeadSec";
+  private static final String kMovingShotUseMotionCompensationKey =
+      "MovingShot/UseMotionCompensation";
   private static final String kAimOffsetInchesKey = "AutoAim/LateralOffsetInches";
   private static final String kDistanceOffsetInchesKey = "AutoAim/DistanceOffsetInches";
   private static final String kTurretRotationLeadSecondsKey = "AutoAim/TurretRotationLeadSec";
@@ -75,12 +93,15 @@ public class RobotContainer {
   private static final double kTurretReadyToleranceDegDefault = 3.0;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
   private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
+  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = 1.5;
+  private static final double kMovingShotDriverMaxLinearScaleDefault = 0.4;
+  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.25;
+  private static final double kMovingShotTargetLeadSecondsDefault = 0.18;
 
   // Subsystems
   private final Drive drive;
   private final Shooter shooter = new Shooter();
   private final Whirlpool whirlpool = new Whirlpool();
-  private final Climber climber = new Climber();
   private final Turret turret = new Turret();
   private final Intake intake = new Intake();
   private final LEDLights ledLights = new LEDLights();
@@ -137,6 +158,22 @@ public class RobotContainer {
     SmartDashboard.putNumber(kBluePassBottomYKey, kBluePassTargetBottomDefaultFieldMeters.getY());
     SmartDashboard.putNumber(kBluePassTopXKey, kBluePassTargetTopDefaultFieldMeters.getX());
     SmartDashboard.putNumber(kBluePassTopYKey, kBluePassTargetTopDefaultFieldMeters.getY());
+    SmartDashboard.putNumber(kMovingShotLateralOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
+    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 6.0);
+    SmartDashboard.putNumber(
+        kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
+    SmartDashboard.putNumber(
+        kMovingShotShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
+    SmartDashboard.putNumber(
+        kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
+    SmartDashboard.putNumber(
+        kMovingShotDriverMaxLinearScaleKey, kMovingShotDriverMaxLinearScaleDefault);
+    SmartDashboard.putNumber(
+        kMovingShotDriverMaxOmegaScaleKey, kMovingShotDriverMaxOmegaScaleDefault);
+    SmartDashboard.putNumber(kMovingShotTargetLeadSecondsKey, kMovingShotTargetLeadSecondsDefault);
+    SmartDashboard.putBoolean(kMovingShotUseMotionCompensationKey, true);
 
     switch (Constants.currentMode) {
       case REAL:
@@ -240,7 +277,9 @@ public class RobotContainer {
             drive,
             () -> flightcontroller.getRawAxis(1),
             () -> -flightcontroller.getRawAxis(0),
-            () -> -flightcontroller.getRawAxis(3)));
+            () -> -flightcontroller.getRawAxis(3),
+            this::getMovingShotDriveLinearScale,
+            this::getMovingShotDriveOmegaScale));
     // Lock to 0° when A button is held
     // controller
     //     .a()
@@ -315,25 +354,6 @@ public class RobotContainer {
     // operatorcontroller.b().onTrue(new InstantCommand(climber::slowreverseclimber));
     // operatorcontroller.b().onFalse(new InstantCommand(climber::stopclimber));
 
-    operatorcontroller
-        .leftStick()
-        .whileTrue(
-            Commands.startEnd(climber::startclimber, climber::stopclimber, climber)
-                .alongWith(
-                    DriveCommands.robotRelativeDrive(
-                        drive, () -> Constants.climbDriveSpeedMetersPerSec, () -> 0.0, () -> 0.0)));
-
-    operatorcontroller
-        .rightStick()
-        .whileTrue(
-            Commands.startEnd(climber::reverseclimber, climber::stopclimber, climber)
-                .alongWith(
-                    DriveCommands.robotRelativeDrive(
-                        drive,
-                        () -> -Constants.climbDriveSpeedMetersPerSec,
-                        () -> 0.0,
-                        () -> 0.0)));
-
     // Hold button 4 for normal auto-aim (turret + shooter + hood only).
     flightcontroller.button(4).whileTrue(Commands.run(() -> runAutoAim(false), turret, shooter));
 
@@ -342,9 +362,19 @@ public class RobotContainer {
         .button(5)
         .whileTrue(Commands.run(() -> runAutoAim(true), turret, shooter, whirlpool));
 
+    flightcontroller
+        .button(6)
+        .whileTrue(Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool));
+
     flightcontroller.button(4).onFalse(new InstantCommand(shooter::stopshooter));
     flightcontroller
         .button(5)
+        .onFalse(
+            Commands.sequence(
+                new InstantCommand(shooter::stopshooter),
+                new InstantCommand(whirlpool::stopwhirlpool)));
+    flightcontroller
+        .button(6)
         .onFalse(
             Commands.sequence(
                 new InstantCommand(shooter::stopshooter),
@@ -481,6 +511,107 @@ public class RobotContainer {
     SmartDashboard.putBoolean("AutoAim/RobotSlowEnough", robotSlowEnough);
     SmartDashboard.putBoolean("AutoAim/IsPassingShot", isPassingShot);
     SmartDashboard.putBoolean("AutoAim/CanAutoFeed", canAutoFeed);
+  }
+
+  private void runMovingShot(boolean autoShootEnabled) {
+    double lateralOffsetInches = SmartDashboard.getNumber(kMovingShotLateralOffsetInchesKey, 0.0);
+    shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
+    double distanceOffsetInches = SmartDashboard.getNumber(kMovingShotDistanceOffsetInchesKey, 0.0);
+    shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
+
+    Pose2d robotPose = drive.getPose();
+    Translation2d targetCenter = getCurrentAllianceAimTarget(robotPose);
+    Translation2d compensatedTarget = targetCenter;
+    Translation2d fieldVelocity = drive.getFieldRelativeVelocityMetersPerSec();
+    boolean useMotionCompensation =
+        SmartDashboard.getBoolean(kMovingShotUseMotionCompensationKey, true);
+    if (useMotionCompensation) {
+      double targetLeadSec =
+          SmartDashboard.getNumber(
+              kMovingShotTargetLeadSecondsKey, kMovingShotTargetLeadSecondsDefault);
+      compensatedTarget = targetCenter.minus(fieldVelocity.times(targetLeadSec));
+    }
+
+    ShooterCalc.ShotSolution shot = shooterCalc.calculateShot(robotPose, compensatedTarget);
+
+    double yawRateRadPerSec = drive.getYawRateRadPerSec();
+    double leadSec = SmartDashboard.getNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
+    double compScale = SmartDashboard.getNumber(kMovingShotTurretRotationCompScaleKey, 6.0);
+    double turretRotationCompDeg = Units.radiansToDegrees(yawRateRadPerSec * leadSec * compScale);
+
+    turret.setturrettoangle(shot.getTurretCommandDegrees() + turretRotationCompDeg);
+    shooter.shootersetvelocity(shot.getShooterRps());
+    shooter.setshooterhood(shot.getHoodPercent());
+
+    double turretReadyToleranceDeg =
+        SmartDashboard.getNumber(
+            kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
+    double shooterReadyToleranceRps =
+        SmartDashboard.getNumber(
+            kMovingShotShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
+    double autoShootMaxRobotSpeedMps =
+        SmartDashboard.getNumber(
+            kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
+    boolean turretReady = turret.isAtTarget(turretReadyToleranceDeg);
+    boolean shooterReady = shooter.isAtSpeed(shot.getShooterRps(), shooterReadyToleranceRps);
+    double robotLinearSpeedMps = drive.getLinearSpeedMetersPerSec();
+    boolean robotSlowEnough = robotLinearSpeedMps <= autoShootMaxRobotSpeedMps;
+    boolean canAutoFeed = autoShootEnabled && turretReady && shooterReady && robotSlowEnough;
+    if (autoShootEnabled) {
+      if (canAutoFeed) {
+        whirlpool.startwhirlpool();
+      } else {
+        whirlpool.stopwhirlpool();
+      }
+    }
+
+    SmartDashboard.putNumber("MovingShot/TargetX", targetCenter.getX());
+    SmartDashboard.putNumber("MovingShot/TargetY", targetCenter.getY());
+    SmartDashboard.putNumber("MovingShot/CompensatedTargetX", compensatedTarget.getX());
+    SmartDashboard.putNumber("MovingShot/CompensatedTargetY", compensatedTarget.getY());
+    SmartDashboard.putNumber("MovingShot/DistanceMeters", shot.getDistanceMeters());
+    SmartDashboard.putNumber(
+        "MovingShot/EffectiveDistanceMeters", shot.getEffectiveDistanceMeters());
+    SmartDashboard.putNumber("MovingShot/TurretCmdDeg", shot.getTurretCommandDegrees());
+    SmartDashboard.putNumber("MovingShot/ShooterRps", shot.getShooterRps());
+    SmartDashboard.putNumber("MovingShot/HoodPercent", shot.getHoodPercent());
+    SmartDashboard.putNumber(
+        "MovingShot/LateralOffsetMeters", shooterCalc.getLateralAimOffsetMeters());
+    SmartDashboard.putNumber(
+        "MovingShot/DistanceOffsetMeters", shooterCalc.getDistanceOffsetMeters());
+    SmartDashboard.putNumber("MovingShot/YawRateRadPerSec", yawRateRadPerSec);
+    SmartDashboard.putNumber("MovingShot/RobotLinearSpeedMps", robotLinearSpeedMps);
+    SmartDashboard.putNumber("MovingShot/RobotFieldVxMps", fieldVelocity.getX());
+    SmartDashboard.putNumber("MovingShot/RobotFieldVyMps", fieldVelocity.getY());
+    SmartDashboard.putNumber("MovingShot/TurretRotationCompDeg", turretRotationCompDeg);
+    SmartDashboard.putBoolean("MovingShot/TurretReady", turretReady);
+    SmartDashboard.putBoolean("MovingShot/ShooterReady", shooterReady);
+    SmartDashboard.putBoolean("MovingShot/RobotSlowEnough", robotSlowEnough);
+    SmartDashboard.putBoolean("MovingShot/CanAutoFeed", canAutoFeed);
+    SmartDashboard.putNumber("MovingShot/DriverLinearScaleActive", getMovingShotDriveLinearScale());
+    SmartDashboard.putNumber("MovingShot/DriverOmegaScaleActive", getMovingShotDriveOmegaScale());
+  }
+
+  private double getMovingShotDriveLinearScale() {
+    if (!flightcontroller.getHID().getRawButton(6)) {
+      return 1.0;
+    }
+    double maxAllowedSpeedMps =
+        SmartDashboard.getNumber(
+            kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
+    double autoShootScale = maxAllowedSpeedMps / drive.getMaxLinearSpeedMetersPerSec();
+    double manualScale =
+        SmartDashboard.getNumber(
+            kMovingShotDriverMaxLinearScaleKey, kMovingShotDriverMaxLinearScaleDefault);
+    return Math.min(manualScale, autoShootScale);
+  }
+
+  private double getMovingShotDriveOmegaScale() {
+    if (!flightcontroller.getHID().getRawButton(6)) {
+      return 1.0;
+    }
+    return SmartDashboard.getNumber(
+        kMovingShotDriverMaxOmegaScaleKey, kMovingShotDriverMaxOmegaScaleDefault);
   }
 
   private Translation2d getCurrentAllianceAimTarget(Pose2d robotPose) {

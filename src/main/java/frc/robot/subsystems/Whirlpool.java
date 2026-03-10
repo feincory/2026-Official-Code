@@ -20,7 +20,9 @@ public class Whirlpool extends SubsystemBase {
 
   public Whirlpool() {
     TalonFXConfiguration whirlpoolconfig = new TalonFXConfiguration();
-    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .75;
+    whirlpoolconfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = .3;
+    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .3;
+    whirlpoolconfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = .3;
     whirlpoolconfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .5;
     SmartDashboard.putNumber("Whirlpool Speed", 0);
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -39,7 +41,8 @@ public class Whirlpool extends SubsystemBase {
   }
 
   public void startwhirlpool() {
-    m_whirlpool.set(SmartDashboard.getNumber("Whirlpool Speed", .6));
+    // m_whirlpool.set(SmartDashboard.getNumber("Whirlpool Speed", .6));
+    m_whirlpool.set(1.0);
     m_feeder.set(.8);
   }
 
