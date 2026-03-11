@@ -30,9 +30,9 @@ public final class Constants {
   }
   // Intake Constants
   public static double intakedeployposition = 11.5;
-  public static double intakemidstopposition = 8;
+  public static double intakemidstopposition = 6.5;
   public static double intakeretractposition = 0;
-  public static double intakeOscillationFrequencyHz = 1.2;
+  public static double intakeOscillationFrequencyHz = .9;
   public static int kintakehomeswt = 0;
 
   // shooter constancts

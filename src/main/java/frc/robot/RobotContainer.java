@@ -94,10 +94,10 @@ public class RobotContainer {
   private static final double kTurretReadyToleranceDegDefault = 2.54;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
   private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
-  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = .75;
+  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = .5;
   private static final double kMovingShotDriverMaxLinearScaleDefault = 0.4;
-  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.2;
-  private static final double kMovingShotTargetLeadSecondsDefault = 0.8;
+  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.15;
+  private static final double kMovingShotTargetLeadSecondsDefault = 1.8;
   private static final double kAimOffsetAdjustStepInches = 4.0;
   private static final double kAimOffsetStickThreshold = 0.9;
 
@@ -145,6 +145,9 @@ public class RobotContainer {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
     NamedCommands.registerCommand("Run Whirlpool", new InstantCommand(whirlpool::startwhirlpool));
     NamedCommands.registerCommand("Stop Whirlpool", new InstantCommand(whirlpool::stopwhirlpool));
+
+    NamedCommands.registerCommand("Deploy Intake", new InstantCommand(intake::deployintake));
+    NamedCommands.registerCommand("Osc Intake", new InstantCommand(intake::startOscillation));
     NamedCommands.registerCommand(
         "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
     NamedCommands.registerCommand(
@@ -164,9 +167,9 @@ public class RobotContainer {
     SmartDashboard.putNumber(kBluePassTopXKey, kBluePassTargetTopDefaultFieldMeters.getX());
     SmartDashboard.putNumber(kBluePassTopYKey, kBluePassTargetTopDefaultFieldMeters.getY());
     SmartDashboard.putNumber(kMovingShotLateralOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 10);
     SmartDashboard.putNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 2.0);
+    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 3.2);
     SmartDashboard.putNumber(
         kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
     SmartDashboard.putNumber(
@@ -282,7 +285,7 @@ public class RobotContainer {
             drive,
             () -> flightcontroller.getRawAxis(1),
             () -> -flightcontroller.getRawAxis(0),
-            () -> -flightcontroller.getRawAxis(3),
+            () -> -flightcontroller.getRawAxis(3) * .75,
             this::getMovingShotDriveLinearScale,
             this::getMovingShotDriveOmegaScale));
     // Lock to 0° when A button is held
@@ -527,7 +530,7 @@ public class RobotContainer {
 
     double yawRateRadPerSec = drive.getYawRateRadPerSec();
     double leadSec = SmartDashboard.getNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    double compScale = SmartDashboard.getNumber(kMovingShotTurretRotationCompScaleKey, 6.0);
+    double compScale = SmartDashboard.getNumber(kMovingShotTurretRotationCompScaleKey, 2.0);
     double turretRotationCompDeg = Units.radiansToDegrees(yawRateRadPerSec * leadSec * compScale);
 
     turret.setturrettoangle(shot.getTurretCommandDegrees() + turretRotationCompDeg);

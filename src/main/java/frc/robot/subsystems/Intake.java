@@ -102,7 +102,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void runintake() {
-    m_spinner.set(-.8);
+    m_spinner.set(-.77);
   }
 
   public void stopintake() {
