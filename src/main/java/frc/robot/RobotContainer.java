@@ -91,13 +91,13 @@ public class RobotContainer {
   private static final double kFieldLengthMeters = 16.541;
   private static final double kZoneSplitYDefaultMeters = 4.0;
   private static final double kOwnZoneMaxXDefaultMeters = 4.25;
-  private static final double kTurretReadyToleranceDegDefault = 3.0;
+  private static final double kTurretReadyToleranceDegDefault = 2.54;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
   private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
-  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = 1.5;
+  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = .75;
   private static final double kMovingShotDriverMaxLinearScaleDefault = 0.4;
-  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.25;
-  private static final double kMovingShotTargetLeadSecondsDefault = 0.18;
+  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.2;
+  private static final double kMovingShotTargetLeadSecondsDefault = 0.8;
   private static final double kAimOffsetAdjustStepInches = 4.0;
   private static final double kAimOffsetStickThreshold = 0.9;
 
@@ -147,11 +147,13 @@ public class RobotContainer {
     NamedCommands.registerCommand("Stop Whirlpool", new InstantCommand(whirlpool::stopwhirlpool));
     NamedCommands.registerCommand(
         "Auto Shoot", (Commands.run(() -> runAutoAim(false), turret, shooter, whirlpool)));
+    NamedCommands.registerCommand(
+        "Moving Shot", (Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool)));
 
     SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
     SmartDashboard.putNumber(kDistanceOffsetInchesKey, 10);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 6.0);
+    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 5.0);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
     SmartDashboard.putNumber(kShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
     SmartDashboard.putNumber(kAutoShootMaxRobotSpeedMpsKey, kAutoShootMaxRobotSpeedMpsDefault);
@@ -164,7 +166,7 @@ public class RobotContainer {
     SmartDashboard.putNumber(kMovingShotLateralOffsetInchesKey, 0);
     SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 0);
     SmartDashboard.putNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 6.0);
+    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 2.0);
     SmartDashboard.putNumber(
         kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
     SmartDashboard.putNumber(
@@ -503,9 +505,9 @@ public class RobotContainer {
   }
 
   private void runMovingShot(boolean autoShootEnabled) {
-    double lateralOffsetInches = SmartDashboard.getNumber(kMovingShotLateralOffsetInchesKey, 0.0);
+    double lateralOffsetInches = SmartDashboard.getNumber(kMovingShotLateralOffsetInchesKey, 6.0);
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
-    double distanceOffsetInches = SmartDashboard.getNumber(kMovingShotDistanceOffsetInchesKey, 0.0);
+    double distanceOffsetInches = SmartDashboard.getNumber(kMovingShotDistanceOffsetInchesKey, 8.0);
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
 
     Pose2d robotPose = drive.getPose();
