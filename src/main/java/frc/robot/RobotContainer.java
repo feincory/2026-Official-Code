@@ -84,6 +84,8 @@ public class RobotContainer {
   private static final String kAutoShootMaxRobotSpeedMpsKey = "AutoAim/AutoShootMaxRobotSpeedMps";
   private static final String kZoneSplitYMetersKey = "AutoAim/ZoneSplitY";
   private static final String kOwnZoneMaxXMetersKey = "AutoAim/OwnZoneMaxX";
+  private static final String kPassNoShootCenterYKey = "AutoAim/PassNoShootCenterY";
+  private static final String kPassNoShootWidthMetersKey = "AutoAim/PassNoShootWidthMeters";
   private static final String kBluePassBottomXKey = "AutoAim/BluePassBottomX";
   private static final String kBluePassBottomYKey = "AutoAim/BluePassBottomY";
   private static final String kBluePassTopXKey = "AutoAim/BluePassTopX";
@@ -91,6 +93,8 @@ public class RobotContainer {
   private static final double kFieldLengthMeters = 16.541;
   private static final double kZoneSplitYDefaultMeters = 4.0;
   private static final double kOwnZoneMaxXDefaultMeters = 4.25;
+  private static final double kPassNoShootCenterYDefaultMeters = 4.03;
+  private static final double kPassNoShootWidthDefaultMeters = 0.90;
   private static final double kTurretReadyToleranceDegDefault = 2.54;
   private static final double kShooterReadyToleranceRpsDefault = 3.0;
   private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
@@ -162,6 +166,8 @@ public class RobotContainer {
     SmartDashboard.putNumber(kAutoShootMaxRobotSpeedMpsKey, kAutoShootMaxRobotSpeedMpsDefault);
     SmartDashboard.putNumber(kZoneSplitYMetersKey, kZoneSplitYDefaultMeters);
     SmartDashboard.putNumber(kOwnZoneMaxXMetersKey, kOwnZoneMaxXDefaultMeters);
+    SmartDashboard.putNumber(kPassNoShootCenterYKey, kPassNoShootCenterYDefaultMeters);
+    SmartDashboard.putNumber(kPassNoShootWidthMetersKey, kPassNoShootWidthDefaultMeters);
     SmartDashboard.putNumber(kBluePassBottomXKey, kBluePassTargetBottomDefaultFieldMeters.getX());
     SmartDashboard.putNumber(kBluePassBottomYKey, kBluePassTargetBottomDefaultFieldMeters.getY());
     SmartDashboard.putNumber(kBluePassTopXKey, kBluePassTargetTopDefaultFieldMeters.getX());
@@ -456,6 +462,7 @@ public class RobotContainer {
     Pose2d robotPose = drive.getPose();
     Translation2d targetCenter = getCurrentAllianceAimTarget(robotPose);
     boolean isPassingShot = !isRobotInOwnZone(robotPose);
+    boolean inPassNoShootZone = isRobotInPassNoShootZone(robotPose);
     ShooterCalc.ShotSolution shot = shooterCalc.calculateShot(robotPose, targetCenter);
 
     double yawRateRadPerSec = drive.getYawRateRadPerSec();
@@ -478,7 +485,13 @@ public class RobotContainer {
     double robotLinearSpeedMps = drive.getLinearSpeedMetersPerSec();
     boolean robotSlowEnough = robotLinearSpeedMps <= autoShootMaxRobotSpeedMps;
     boolean movementGateSatisfied = isPassingShot || robotSlowEnough;
-    boolean canAutoFeed = autoShootEnabled && turretReady && shooterReady && movementGateSatisfied;
+    boolean passZoneGateSatisfied = !isPassingShot || !inPassNoShootZone;
+    boolean canAutoFeed =
+        autoShootEnabled
+            && turretReady
+            && shooterReady
+            && movementGateSatisfied
+            && passZoneGateSatisfied;
     if (autoShootEnabled) {
       if (canAutoFeed) {
         whirlpool.startwhirlpool();
@@ -504,6 +517,7 @@ public class RobotContainer {
     SmartDashboard.putBoolean("AutoAim/ShooterReady", shooterReady);
     SmartDashboard.putBoolean("AutoAim/RobotSlowEnough", robotSlowEnough);
     SmartDashboard.putBoolean("AutoAim/IsPassingShot", isPassingShot);
+    SmartDashboard.putBoolean("AutoAim/InPassNoShootZone", inPassNoShootZone);
     SmartDashboard.putBoolean("AutoAim/CanAutoFeed", canAutoFeed);
   }
 
@@ -670,6 +684,15 @@ public class RobotContainer {
             ? robotPose.getX()
             : kFieldLengthMeters - robotPose.getX();
     return xFromOwnWallMeters <= ownZoneMaxXMeters;
+  }
+
+  private boolean isRobotInPassNoShootZone(Pose2d robotPose) {
+    double passNoShootCenterY =
+        SmartDashboard.getNumber(kPassNoShootCenterYKey, kPassNoShootCenterYDefaultMeters);
+    double passNoShootWidthMeters =
+        SmartDashboard.getNumber(kPassNoShootWidthMetersKey, kPassNoShootWidthDefaultMeters);
+    double halfWidthMeters = Math.max(0.0, passNoShootWidthMeters) / 2.0;
+    return Math.abs(robotPose.getY() - passNoShootCenterY) <= halfWidthMeters;
   }
 
   private static NavigableMap<Double, Double> buildShooterRpsTable() {
