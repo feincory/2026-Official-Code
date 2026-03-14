@@ -123,9 +123,9 @@ public class RobotContainer {
   private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(4.629, 4.03);
   private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
   private static final Translation2d kBluePassTargetBottomDefaultFieldMeters =
-      new Translation2d(3.5, 1.5);
+      new Translation2d(3.5, 2.0);
   private static final Translation2d kBluePassTargetTopDefaultFieldMeters =
-      new Translation2d(3.5, 5.7);
+      new Translation2d(3.5, 5.1);
 
   private final ShooterCalc shooterCalc =
       new ShooterCalc(
@@ -158,9 +158,9 @@ public class RobotContainer {
         "Moving Shot", (Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool)));
 
     SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, 10);
+    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -2);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 5.0);
+    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 2.5);
     SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
     SmartDashboard.putNumber(kShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
     SmartDashboard.putNumber(kAutoShootMaxRobotSpeedMpsKey, kAutoShootMaxRobotSpeedMpsDefault);
@@ -175,7 +175,7 @@ public class RobotContainer {
     SmartDashboard.putNumber(kMovingShotLateralOffsetInchesKey, 0);
     SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 10);
     SmartDashboard.putNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 3.2);
+    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 5.0);
     SmartDashboard.putNumber(
         kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
     SmartDashboard.putNumber(
@@ -289,9 +289,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> flightcontroller.getRawAxis(1),
-            () -> -flightcontroller.getRawAxis(0),
-            () -> -flightcontroller.getRawAxis(3) * .75,
+            () -> flightcontroller.getRawAxis(1)*.75,
+            () -> -flightcontroller.getRawAxis(0)*.75,
+            () -> -flightcontroller.getRawAxis(3) * .6,
             this::getMovingShotDriveLinearScale,
             this::getMovingShotDriveOmegaScale));
     // Lock to 0° when A button is held
