@@ -157,7 +157,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Moving Shot", (Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool)));
 
-    SmartDashboard.putNumber(kAimOffsetInchesKey, 0);
+    SmartDashboard.putNumber(kAimOffsetInchesKey, -3);
     SmartDashboard.putNumber(kDistanceOffsetInchesKey, -2);
     SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
     SmartDashboard.putNumber(kTurretRotationCompScaleKey, 2.5);
@@ -289,8 +289,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> flightcontroller.getRawAxis(1)*.75,
-            () -> -flightcontroller.getRawAxis(0)*.75,
+            () -> flightcontroller.getRawAxis(1) * .8,
+            () -> -flightcontroller.getRawAxis(0) * .8,
             () -> -flightcontroller.getRawAxis(3) * .6,
             this::getMovingShotDriveLinearScale,
             this::getMovingShotDriveOmegaScale));
@@ -454,7 +454,9 @@ public class RobotContainer {
   }
 
   private void runAutoAim(boolean autoShootEnabled) {
-    double lateralOffsetInches = SmartDashboard.getNumber(kAimOffsetInchesKey, 6);
+    double lateralOffsetInches =
+        SmartDashboard.getNumber(
+            kAimOffsetInchesKey, -3); // was 6, subtracting makes the shooter go to the right
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
     double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 10);
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
