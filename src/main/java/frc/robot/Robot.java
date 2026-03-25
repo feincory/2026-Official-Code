@@ -26,6 +26,7 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private Command disableStopCommand;
   private boolean disableStopCommandScheduled;
+  private boolean autonomousVisited;
   private RobotContainer robotContainer;
 
   public Robot() {
@@ -110,6 +111,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    autonomousVisited = true;
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -131,6 +133,10 @@ public class Robot extends LoggedRobot {
     // this line or comment it out.
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
+    }
+    if (autonomousVisited) {
+      robotContainer.onAutoExitToTeleop();
+      autonomousVisited = false;
     }
     robotContainer.onTeleopInit();
   }

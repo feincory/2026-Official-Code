@@ -9,6 +9,7 @@ package frc.robot;
 
 import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
 import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera2Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -27,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.AutoAimConstants;
+import frc.robot.Constants.MovingPassShotConstants;
+import frc.robot.Constants.MovingShotConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.HomeShooterHood;
 import frc.robot.generated.TunerConstants;
@@ -56,54 +60,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  private static final String kMovingShotLateralOffsetInchesKey = "MovingShot/LateralOffsetInches";
-  private static final String kMovingShotDistanceOffsetInchesKey =
-      "MovingShot/DistanceOffsetInches";
-  private static final String kMovingShotTurretRotationLeadSecondsKey =
-      "MovingShot/TurretRotationLeadSec";
-  private static final String kMovingShotTurretRotationCompScaleKey =
-      "MovingShot/TurretRotationCompScale";
-  private static final String kMovingShotTurretReadyToleranceDegKey =
-      "MovingShot/TurretReadyToleranceDeg";
-  private static final String kMovingShotShooterReadyToleranceRpsKey =
-      "MovingShot/ShooterReadyToleranceRps";
-  private static final String kMovingShotAutoShootMaxRobotSpeedMpsKey =
-      "MovingShot/AutoShootMaxRobotSpeedMps";
-  private static final String kMovingShotDriverMaxLinearScaleKey =
-      "MovingShot/DriverMaxLinearScale";
-  private static final String kMovingShotDriverMaxOmegaScaleKey = "MovingShot/DriverMaxOmegaScale";
-  private static final String kMovingShotTargetLeadSecondsKey = "MovingShot/TargetLeadSec";
-  private static final String kMovingShotUseMotionCompensationKey =
-      "MovingShot/UseMotionCompensation";
-  private static final String kAimOffsetInchesKey = "AutoAim/LateralOffsetInches";
-  private static final String kDistanceOffsetInchesKey = "AutoAim/DistanceOffsetInches";
-  private static final String kTurretRotationLeadSecondsKey = "AutoAim/TurretRotationLeadSec";
-  private static final String kTurretRotationCompScaleKey = "AutoAim/TurretRotationCompScale";
-  private static final String kTurretReadyToleranceDegKey = "AutoAim/TurretReadyToleranceDeg";
-  private static final String kShooterReadyToleranceRpsKey = "AutoAim/ShooterReadyToleranceRps";
-  private static final String kAutoShootMaxRobotSpeedMpsKey = "AutoAim/AutoShootMaxRobotSpeedMps";
-  private static final String kZoneSplitYMetersKey = "AutoAim/ZoneSplitY";
-  private static final String kOwnZoneMaxXMetersKey = "AutoAim/OwnZoneMaxX";
-  private static final String kPassNoShootCenterYKey = "AutoAim/PassNoShootCenterY";
-  private static final String kPassNoShootWidthMetersKey = "AutoAim/PassNoShootWidthMeters";
-  private static final String kBluePassBottomXKey = "AutoAim/BluePassBottomX";
-  private static final String kBluePassBottomYKey = "AutoAim/BluePassBottomY";
-  private static final String kBluePassTopXKey = "AutoAim/BluePassTopX";
-  private static final String kBluePassTopYKey = "AutoAim/BluePassTopY";
-  private static final double kFieldLengthMeters = 16.541;
-  private static final double kZoneSplitYDefaultMeters = 4.0;
-  private static final double kOwnZoneMaxXDefaultMeters = 4.25;
-  private static final double kPassNoShootCenterYDefaultMeters = 4.03;
-  private static final double kPassNoShootWidthDefaultMeters = 0.90;
-  private static final double kTurretReadyToleranceDegDefault = 2.54;
-  private static final double kShooterReadyToleranceRpsDefault = 3.0;
-  private static final double kAutoShootMaxRobotSpeedMpsDefault = 0.15;
-  private static final double kMovingShotAutoShootMaxRobotSpeedMpsDefault = .5;
-  private static final double kMovingShotDriverMaxLinearScaleDefault = 0.4;
-  private static final double kMovingShotDriverMaxOmegaScaleDefault = 0.15;
-  private static final double kMovingShotTargetLeadSecondsDefault = 1.8;
   private static final double kAimOffsetAdjustStepInches = 4.0;
   private static final double kAimOffsetStickThreshold = 0.9;
+  private static final double hoodpassingaddition = .2;
 
   // Subsystems
   private final Drive drive;
@@ -122,10 +81,6 @@ public class RobotContainer {
   // Replace with real field goal center positions for your game.
   private static final Translation2d kBlueGoalCenterFieldMeters = new Translation2d(4.629, 4.03);
   private static final Translation2d kRedGoalCenterFieldMeters = new Translation2d(11.918, 4.03);
-  private static final Translation2d kBluePassTargetBottomDefaultFieldMeters =
-      new Translation2d(3.5, 2.0);
-  private static final Translation2d kBluePassTargetTopDefaultFieldMeters =
-      new Translation2d(3.5, 5.1);
 
   private final ShooterCalc shooterCalc =
       new ShooterCalc(
@@ -135,7 +90,9 @@ public class RobotContainer {
           -225.0,
           225.0,
           buildShooterRpsTable(),
-          buildHoodPercentTable());
+          buildHoodPercentTable(),
+          buildShooterPassing(),
+          buildShooterPassinghood());
 
   // Controller
   private final CommandJoystick flightcontroller = new CommandJoystick(0);
@@ -157,37 +114,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Moving Shot", (Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool)));
 
-    SmartDashboard.putNumber(kAimOffsetInchesKey, -3);
-    SmartDashboard.putNumber(kDistanceOffsetInchesKey, -2);
-    SmartDashboard.putNumber(kTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kTurretRotationCompScaleKey, 2.5);
-    SmartDashboard.putNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
-    SmartDashboard.putNumber(kShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
-    SmartDashboard.putNumber(kAutoShootMaxRobotSpeedMpsKey, kAutoShootMaxRobotSpeedMpsDefault);
-    SmartDashboard.putNumber(kZoneSplitYMetersKey, kZoneSplitYDefaultMeters);
-    SmartDashboard.putNumber(kOwnZoneMaxXMetersKey, kOwnZoneMaxXDefaultMeters);
-    SmartDashboard.putNumber(kPassNoShootCenterYKey, kPassNoShootCenterYDefaultMeters);
-    SmartDashboard.putNumber(kPassNoShootWidthMetersKey, kPassNoShootWidthDefaultMeters);
-    SmartDashboard.putNumber(kBluePassBottomXKey, kBluePassTargetBottomDefaultFieldMeters.getX());
-    SmartDashboard.putNumber(kBluePassBottomYKey, kBluePassTargetBottomDefaultFieldMeters.getY());
-    SmartDashboard.putNumber(kBluePassTopXKey, kBluePassTargetTopDefaultFieldMeters.getX());
-    SmartDashboard.putNumber(kBluePassTopYKey, kBluePassTargetTopDefaultFieldMeters.getY());
-    SmartDashboard.putNumber(kMovingShotLateralOffsetInchesKey, 0);
-    SmartDashboard.putNumber(kMovingShotDistanceOffsetInchesKey, 10);
-    SmartDashboard.putNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    SmartDashboard.putNumber(kMovingShotTurretRotationCompScaleKey, 5.0);
-    SmartDashboard.putNumber(
-        kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
-    SmartDashboard.putNumber(
-        kMovingShotShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
-    SmartDashboard.putNumber(
-        kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
-    SmartDashboard.putNumber(
-        kMovingShotDriverMaxLinearScaleKey, kMovingShotDriverMaxLinearScaleDefault);
-    SmartDashboard.putNumber(
-        kMovingShotDriverMaxOmegaScaleKey, kMovingShotDriverMaxOmegaScaleDefault);
-    SmartDashboard.putNumber(kMovingShotTargetLeadSecondsKey, kMovingShotTargetLeadSecondsDefault);
-    SmartDashboard.putBoolean(kMovingShotUseMotionCompensationKey, true);
+    seedDashboardDefaults();
 
     switch (Constants.currentMode) {
       case REAL:
@@ -205,7 +132,8 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOLimelight(camera0Name, drive::getRotation),
-                new VisionIOLimelight(camera1Name, drive::getRotation));
+                new VisionIOLimelight(camera1Name, drive::getRotation),
+                new VisionIOLimelight(camera2Name, drive::getRotation));
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
         // implementations
@@ -289,9 +217,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> flightcontroller.getRawAxis(1) * .8,
-            () -> -flightcontroller.getRawAxis(0) * .8,
-            () -> -flightcontroller.getRawAxis(3) * .6,
+            () -> flightcontroller.getRawAxis(1),
+            () -> -flightcontroller.getRawAxis(0),
+            () -> -flightcontroller.getRawAxis(3),
             this::getMovingShotDriveLinearScale,
             this::getMovingShotDriveOmegaScale));
     // Lock to 0° when A button is held
@@ -453,23 +381,151 @@ public class RobotContainer {
     ledLights.onTeleopInit();
   }
 
+  public void onAutoExitToTeleop() {
+    intake.exitAutoToTeleop();
+  }
+
+  private void seedDashboardDefaults() {
+    SmartDashboard.putNumber(
+        AutoAimConstants.LATERAL_OFFSET_INCHES_KEY, AutoAimConstants.LATERAL_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.DISTANCE_OFFSET_INCHES_KEY,
+        AutoAimConstants.DISTANCE_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.TURRET_ROTATION_LEAD_SECONDS_KEY,
+        AutoAimConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.TURRET_ROTATION_COMP_SCALE_KEY,
+        AutoAimConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.TURRET_READY_TOLERANCE_DEG_KEY,
+        AutoAimConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_KEY,
+        AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY,
+        AutoAimConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.ZONE_SPLIT_Y_METERS_KEY, AutoAimConstants.ZONE_SPLIT_Y_METERS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.OWN_ZONE_MAX_X_METERS_KEY, AutoAimConstants.OWN_ZONE_MAX_X_METERS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.PASS_NO_SHOOT_CENTER_Y_KEY,
+        AutoAimConstants.PASS_NO_SHOOT_CENTER_Y_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.PASS_NO_SHOOT_WIDTH_METERS_KEY,
+        AutoAimConstants.PASS_NO_SHOOT_WIDTH_METERS_DEFAULT);
+    SmartDashboard.putNumber(
+        AutoAimConstants.BLUE_PASS_BOTTOM_X_KEY,
+        AutoAimConstants.BLUE_PASS_TARGET_BOTTOM_DEFAULT_FIELD_METERS.getX());
+    SmartDashboard.putNumber(
+        AutoAimConstants.BLUE_PASS_BOTTOM_Y_KEY,
+        AutoAimConstants.BLUE_PASS_TARGET_BOTTOM_DEFAULT_FIELD_METERS.getY());
+    SmartDashboard.putNumber(
+        AutoAimConstants.BLUE_PASS_TOP_X_KEY,
+        AutoAimConstants.BLUE_PASS_TARGET_TOP_DEFAULT_FIELD_METERS.getX());
+    SmartDashboard.putNumber(
+        AutoAimConstants.BLUE_PASS_TOP_Y_KEY,
+        AutoAimConstants.BLUE_PASS_TARGET_TOP_DEFAULT_FIELD_METERS.getY());
+
+    SmartDashboard.putNumber(
+        MovingShotConstants.LATERAL_OFFSET_INCHES_KEY,
+        MovingShotConstants.LATERAL_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.DISTANCE_OFFSET_INCHES_KEY,
+        MovingShotConstants.DISTANCE_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.TURRET_ROTATION_LEAD_SECONDS_KEY,
+        MovingShotConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.TURRET_ROTATION_COMP_SCALE_KEY,
+        MovingShotConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.TURRET_READY_TOLERANCE_DEG_KEY,
+        MovingShotConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.SHOOTER_READY_TOLERANCE_RPS_KEY,
+        MovingShotConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY,
+        MovingShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.DRIVER_MAX_LINEAR_SCALE_KEY,
+        MovingShotConstants.DRIVER_MAX_LINEAR_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY,
+        MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingShotConstants.TARGET_LEAD_SECONDS_KEY,
+        MovingShotConstants.TARGET_LEAD_SECONDS_DEFAULT);
+    SmartDashboard.putBoolean(
+        MovingShotConstants.USE_MOTION_COMPENSATION_KEY,
+        MovingShotConstants.USE_MOTION_COMPENSATION_DEFAULT);
+
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.LATERAL_OFFSET_INCHES_KEY,
+        MovingPassShotConstants.LATERAL_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.DISTANCE_OFFSET_INCHES_KEY,
+        MovingPassShotConstants.DISTANCE_OFFSET_INCHES_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.TURRET_ROTATION_LEAD_SECONDS_KEY,
+        MovingPassShotConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.TURRET_ROTATION_COMP_SCALE_KEY,
+        MovingPassShotConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.TURRET_READY_TOLERANCE_DEG_KEY,
+        MovingPassShotConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.SHOOTER_READY_TOLERANCE_RPS_KEY,
+        MovingPassShotConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY,
+        MovingPassShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.DRIVER_MAX_LINEAR_SCALE_KEY,
+        MovingPassShotConstants.DRIVER_MAX_LINEAR_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY,
+        MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT);
+    SmartDashboard.putNumber(
+        MovingPassShotConstants.TARGET_LEAD_SECONDS_KEY,
+        MovingPassShotConstants.TARGET_LEAD_SECONDS_DEFAULT);
+    SmartDashboard.putBoolean(
+        MovingPassShotConstants.USE_MOTION_COMPENSATION_KEY,
+        MovingPassShotConstants.USE_MOTION_COMPENSATION_DEFAULT);
+  }
+
   private void runAutoAim(boolean autoShootEnabled) {
     double lateralOffsetInches =
         SmartDashboard.getNumber(
-            kAimOffsetInchesKey, -3); // was 6, subtracting makes the shooter go to the right
+            AutoAimConstants.LATERAL_OFFSET_INCHES_KEY,
+            AutoAimConstants.LATERAL_OFFSET_INCHES_DEFAULT);
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
-    double distanceOffsetInches = SmartDashboard.getNumber(kDistanceOffsetInchesKey, 10);
+    double distanceOffsetInches =
+        SmartDashboard.getNumber(
+            AutoAimConstants.DISTANCE_OFFSET_INCHES_KEY,
+            AutoAimConstants.DISTANCE_OFFSET_INCHES_DEFAULT);
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
 
     Pose2d robotPose = drive.getPose();
     Translation2d targetCenter = getCurrentAllianceAimTarget(robotPose);
     boolean isPassingShot = !isRobotInOwnZone(robotPose);
     boolean inPassNoShootZone = isRobotInPassNoShootZone(robotPose);
-    ShooterCalc.ShotSolution shot = shooterCalc.calculateShot(robotPose, targetCenter);
+    ShooterCalc.ShotSolution shot =
+        shooterCalc.calculateShot(robotPose, targetCenter, isPassingShot);
 
     double yawRateRadPerSec = drive.getYawRateRadPerSec();
-    double leadSec = SmartDashboard.getNumber(kTurretRotationLeadSecondsKey, 0.0);
-    double compScale = SmartDashboard.getNumber(kTurretRotationCompScaleKey, 1.0);
+    double leadSec =
+        SmartDashboard.getNumber(
+            AutoAimConstants.TURRET_ROTATION_LEAD_SECONDS_KEY,
+            AutoAimConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT);
+    double compScale =
+        SmartDashboard.getNumber(
+            AutoAimConstants.TURRET_ROTATION_COMP_SCALE_KEY,
+            AutoAimConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT);
     double turretRotationCompDeg = Units.radiansToDegrees(yawRateRadPerSec * leadSec * compScale);
 
     turret.setturrettoangle(shot.getTurretCommandDegrees() + turretRotationCompDeg);
@@ -477,11 +533,17 @@ public class RobotContainer {
     shooter.setshooterhood(shot.getHoodPercent());
 
     double turretReadyToleranceDeg =
-        SmartDashboard.getNumber(kTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
+        SmartDashboard.getNumber(
+            AutoAimConstants.TURRET_READY_TOLERANCE_DEG_KEY,
+            AutoAimConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT);
     double shooterReadyToleranceRps =
-        SmartDashboard.getNumber(kShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
+        SmartDashboard.getNumber(
+            AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_KEY,
+            AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT);
     double autoShootMaxRobotSpeedMps =
-        SmartDashboard.getNumber(kAutoShootMaxRobotSpeedMpsKey, kAutoShootMaxRobotSpeedMpsDefault);
+        SmartDashboard.getNumber(
+            AutoAimConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY,
+            AutoAimConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT);
     boolean turretReady = turret.isAtTarget(turretReadyToleranceDeg);
     boolean shooterReady = shooter.isAtSpeed(shot.getShooterRps(), shooterReadyToleranceRps);
     double robotLinearSpeedMps = drive.getLinearSpeedMetersPerSec();
@@ -524,29 +586,47 @@ public class RobotContainer {
   }
 
   private void runMovingShot(boolean autoShootEnabled) {
-    double lateralOffsetInches = SmartDashboard.getNumber(kMovingShotLateralOffsetInchesKey, 6.0);
+    Pose2d robotPose = drive.getPose();
+    boolean isPassingShot = !isRobotInOwnZone(robotPose);
+
+    double lateralOffsetInches =
+        SmartDashboard.getNumber(
+            getMovingShotLateralOffsetKey(isPassingShot),
+            getMovingShotLateralOffsetDefault(isPassingShot));
     shooterCalc.setLateralAimOffsetMeters(Units.inchesToMeters(lateralOffsetInches));
-    double distanceOffsetInches = SmartDashboard.getNumber(kMovingShotDistanceOffsetInchesKey, 8.0);
+    double distanceOffsetInches =
+        SmartDashboard.getNumber(
+            getMovingShotDistanceOffsetKey(isPassingShot),
+            getMovingShotDistanceOffsetDefault(isPassingShot));
     shooterCalc.setDistanceOffsetMeters(Units.inchesToMeters(distanceOffsetInches));
 
-    Pose2d robotPose = drive.getPose();
     Translation2d targetCenter = getCurrentAllianceAimTarget(robotPose);
     Translation2d compensatedTarget = targetCenter;
     Translation2d fieldVelocity = drive.getFieldRelativeVelocityMetersPerSec();
     boolean useMotionCompensation =
-        SmartDashboard.getBoolean(kMovingShotUseMotionCompensationKey, true);
+        SmartDashboard.getBoolean(
+            getMovingShotUseMotionCompensationKey(isPassingShot),
+            getMovingShotUseMotionCompensationDefault(isPassingShot));
     if (useMotionCompensation) {
       double targetLeadSec =
           SmartDashboard.getNumber(
-              kMovingShotTargetLeadSecondsKey, kMovingShotTargetLeadSecondsDefault);
+              getMovingShotTargetLeadKey(isPassingShot),
+              getMovingShotTargetLeadDefault(isPassingShot));
       compensatedTarget = targetCenter.minus(fieldVelocity.times(targetLeadSec));
     }
 
-    ShooterCalc.ShotSolution shot = shooterCalc.calculateShot(robotPose, compensatedTarget);
+    ShooterCalc.ShotSolution shot =
+        shooterCalc.calculateShot(robotPose, compensatedTarget, isPassingShot);
 
     double yawRateRadPerSec = drive.getYawRateRadPerSec();
-    double leadSec = SmartDashboard.getNumber(kMovingShotTurretRotationLeadSecondsKey, 0.03);
-    double compScale = SmartDashboard.getNumber(kMovingShotTurretRotationCompScaleKey, 2.0);
+    double leadSec =
+        SmartDashboard.getNumber(
+            getMovingShotTurretRotationLeadKey(isPassingShot),
+            getMovingShotTurretRotationLeadDefault(isPassingShot));
+    double compScale =
+        SmartDashboard.getNumber(
+            getMovingShotTurretRotationCompScaleKey(isPassingShot),
+            getMovingShotTurretRotationCompScaleDefault(isPassingShot));
     double turretRotationCompDeg = Units.radiansToDegrees(yawRateRadPerSec * leadSec * compScale);
 
     turret.setturrettoangle(shot.getTurretCommandDegrees() + turretRotationCompDeg);
@@ -555,13 +635,16 @@ public class RobotContainer {
 
     double turretReadyToleranceDeg =
         SmartDashboard.getNumber(
-            kMovingShotTurretReadyToleranceDegKey, kTurretReadyToleranceDegDefault);
+            getMovingShotTurretReadyToleranceKey(isPassingShot),
+            getMovingShotTurretReadyToleranceDefault(isPassingShot));
     double shooterReadyToleranceRps =
         SmartDashboard.getNumber(
-            kMovingShotShooterReadyToleranceRpsKey, kShooterReadyToleranceRpsDefault);
+            getMovingShotShooterReadyToleranceKey(isPassingShot),
+            getMovingShotShooterReadyToleranceDefault(isPassingShot));
     double autoShootMaxRobotSpeedMps =
         SmartDashboard.getNumber(
-            kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
+            getMovingShotAutoShootMaxRobotSpeedKey(isPassingShot),
+            getMovingShotAutoShootMaxRobotSpeedDefault(isPassingShot));
     boolean turretReady = turret.isAtTarget(turretReadyToleranceDeg);
     boolean shooterReady = shooter.isAtSpeed(shot.getShooterRps(), shooterReadyToleranceRps);
     double robotLinearSpeedMps = drive.getLinearSpeedMetersPerSec();
@@ -597,6 +680,7 @@ public class RobotContainer {
     SmartDashboard.putBoolean("MovingShot/TurretReady", turretReady);
     SmartDashboard.putBoolean("MovingShot/ShooterReady", shooterReady);
     SmartDashboard.putBoolean("MovingShot/RobotSlowEnough", robotSlowEnough);
+    SmartDashboard.putBoolean("MovingShot/IsPassingShot", isPassingShot);
     SmartDashboard.putBoolean("MovingShot/CanAutoFeed", canAutoFeed);
     SmartDashboard.putNumber("MovingShot/DriverLinearScaleActive", getMovingShotDriveLinearScale());
     SmartDashboard.putNumber("MovingShot/DriverOmegaScaleActive", getMovingShotDriveOmegaScale());
@@ -606,13 +690,16 @@ public class RobotContainer {
     if (!flightcontroller.getHID().getRawButton(12)) {
       return 1.0;
     }
+    boolean isPassingShot = !isRobotInOwnZone(drive.getPose());
     double maxAllowedSpeedMps =
         SmartDashboard.getNumber(
-            kMovingShotAutoShootMaxRobotSpeedMpsKey, kMovingShotAutoShootMaxRobotSpeedMpsDefault);
+            getMovingShotAutoShootMaxRobotSpeedKey(isPassingShot),
+            getMovingShotAutoShootMaxRobotSpeedDefault(isPassingShot));
     double autoShootScale = maxAllowedSpeedMps / drive.getMaxLinearSpeedMetersPerSec();
     double manualScale =
         SmartDashboard.getNumber(
-            kMovingShotDriverMaxLinearScaleKey, kMovingShotDriverMaxLinearScaleDefault);
+            getMovingShotDriverMaxLinearScaleKey(isPassingShot),
+            getMovingShotDriverMaxLinearScaleDefault(isPassingShot));
     return Math.min(manualScale, autoShootScale);
   }
 
@@ -620,18 +707,154 @@ public class RobotContainer {
     if (!flightcontroller.getHID().getRawButton(12)) {
       return 1.0;
     }
+    boolean isPassingShot = !isRobotInOwnZone(drive.getPose());
     return SmartDashboard.getNumber(
-        kMovingShotDriverMaxOmegaScaleKey, kMovingShotDriverMaxOmegaScaleDefault);
+        getMovingShotDriverMaxOmegaScaleKey(isPassingShot),
+        getMovingShotDriverMaxOmegaScaleDefault(isPassingShot));
   }
 
   private void adjustDistanceOffsetsInches(double deltaInches) {
-    adjustDashboardNumber(kDistanceOffsetInchesKey, deltaInches);
-    adjustDashboardNumber(kMovingShotDistanceOffsetInchesKey, deltaInches);
+    adjustDashboardNumber(AutoAimConstants.DISTANCE_OFFSET_INCHES_KEY, deltaInches);
+    adjustDashboardNumber(MovingShotConstants.DISTANCE_OFFSET_INCHES_KEY, deltaInches);
+    adjustDashboardNumber(MovingPassShotConstants.DISTANCE_OFFSET_INCHES_KEY, deltaInches);
   }
 
   private void adjustLateralOffsetsInches(double deltaInches) {
-    adjustDashboardNumber(kAimOffsetInchesKey, deltaInches);
-    adjustDashboardNumber(kMovingShotLateralOffsetInchesKey, deltaInches);
+    adjustDashboardNumber(AutoAimConstants.LATERAL_OFFSET_INCHES_KEY, deltaInches);
+    adjustDashboardNumber(MovingShotConstants.LATERAL_OFFSET_INCHES_KEY, deltaInches);
+    adjustDashboardNumber(MovingPassShotConstants.LATERAL_OFFSET_INCHES_KEY, deltaInches);
+  }
+
+  private String getMovingShotLateralOffsetKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.LATERAL_OFFSET_INCHES_KEY
+        : MovingShotConstants.LATERAL_OFFSET_INCHES_KEY;
+  }
+
+  private double getMovingShotLateralOffsetDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.LATERAL_OFFSET_INCHES_DEFAULT
+        : MovingShotConstants.LATERAL_OFFSET_INCHES_DEFAULT;
+  }
+
+  private String getMovingShotDistanceOffsetKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DISTANCE_OFFSET_INCHES_KEY
+        : MovingShotConstants.DISTANCE_OFFSET_INCHES_KEY;
+  }
+
+  private double getMovingShotDistanceOffsetDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DISTANCE_OFFSET_INCHES_DEFAULT
+        : MovingShotConstants.DISTANCE_OFFSET_INCHES_DEFAULT;
+  }
+
+  private String getMovingShotTurretRotationLeadKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_ROTATION_LEAD_SECONDS_KEY
+        : MovingShotConstants.TURRET_ROTATION_LEAD_SECONDS_KEY;
+  }
+
+  private double getMovingShotTurretRotationLeadDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT
+        : MovingShotConstants.TURRET_ROTATION_LEAD_SECONDS_DEFAULT;
+  }
+
+  private String getMovingShotTurretRotationCompScaleKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_ROTATION_COMP_SCALE_KEY
+        : MovingShotConstants.TURRET_ROTATION_COMP_SCALE_KEY;
+  }
+
+  private double getMovingShotTurretRotationCompScaleDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT
+        : MovingShotConstants.TURRET_ROTATION_COMP_SCALE_DEFAULT;
+  }
+
+  private String getMovingShotTurretReadyToleranceKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_READY_TOLERANCE_DEG_KEY
+        : MovingShotConstants.TURRET_READY_TOLERANCE_DEG_KEY;
+  }
+
+  private double getMovingShotTurretReadyToleranceDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT
+        : MovingShotConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT;
+  }
+
+  private String getMovingShotShooterReadyToleranceKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.SHOOTER_READY_TOLERANCE_RPS_KEY
+        : MovingShotConstants.SHOOTER_READY_TOLERANCE_RPS_KEY;
+  }
+
+  private double getMovingShotShooterReadyToleranceDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT
+        : MovingShotConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT;
+  }
+
+  private String getMovingShotAutoShootMaxRobotSpeedKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY
+        : MovingShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_KEY;
+  }
+
+  private double getMovingShotAutoShootMaxRobotSpeedDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT
+        : MovingShotConstants.AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT;
+  }
+
+  private String getMovingShotDriverMaxLinearScaleKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DRIVER_MAX_LINEAR_SCALE_KEY
+        : MovingShotConstants.DRIVER_MAX_LINEAR_SCALE_KEY;
+  }
+
+  private double getMovingShotDriverMaxLinearScaleDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DRIVER_MAX_LINEAR_SCALE_DEFAULT
+        : MovingShotConstants.DRIVER_MAX_LINEAR_SCALE_DEFAULT;
+  }
+
+  private String getMovingShotDriverMaxOmegaScaleKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY
+        : MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY;
+  }
+
+  private double getMovingShotDriverMaxOmegaScaleDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT
+        : MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT;
+  }
+
+  private String getMovingShotTargetLeadKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TARGET_LEAD_SECONDS_KEY
+        : MovingShotConstants.TARGET_LEAD_SECONDS_KEY;
+  }
+
+  private double getMovingShotTargetLeadDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.TARGET_LEAD_SECONDS_DEFAULT
+        : MovingShotConstants.TARGET_LEAD_SECONDS_DEFAULT;
+  }
+
+  private String getMovingShotUseMotionCompensationKey(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.USE_MOTION_COMPENSATION_KEY
+        : MovingShotConstants.USE_MOTION_COMPENSATION_KEY;
+  }
+
+  private boolean getMovingShotUseMotionCompensationDefault(boolean isPassingShot) {
+    return isPassingShot
+        ? MovingPassShotConstants.USE_MOTION_COMPENSATION_DEFAULT
+        : MovingShotConstants.USE_MOTION_COMPENSATION_DEFAULT;
   }
 
   private void adjustDashboardNumber(String key, double delta) {
@@ -642,25 +865,36 @@ public class RobotContainer {
     DriverStation.Alliance alliance =
         DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue);
     double zoneSplitYMeters =
-        SmartDashboard.getNumber(kZoneSplitYMetersKey, kZoneSplitYDefaultMeters);
+        SmartDashboard.getNumber(
+            AutoAimConstants.ZONE_SPLIT_Y_METERS_KEY, AutoAimConstants.ZONE_SPLIT_Y_METERS_DEFAULT);
     double ownZoneMaxXMeters =
-        SmartDashboard.getNumber(kOwnZoneMaxXMetersKey, kOwnZoneMaxXDefaultMeters);
+        SmartDashboard.getNumber(
+            AutoAimConstants.OWN_ZONE_MAX_X_METERS_KEY,
+            AutoAimConstants.OWN_ZONE_MAX_X_METERS_DEFAULT);
     Translation2d bluePassBottomTarget =
         new Translation2d(
             SmartDashboard.getNumber(
-                kBluePassBottomXKey, kBluePassTargetBottomDefaultFieldMeters.getX()),
+                AutoAimConstants.BLUE_PASS_BOTTOM_X_KEY,
+                AutoAimConstants.BLUE_PASS_TARGET_BOTTOM_DEFAULT_FIELD_METERS.getX()),
             SmartDashboard.getNumber(
-                kBluePassBottomYKey, kBluePassTargetBottomDefaultFieldMeters.getY()));
+                AutoAimConstants.BLUE_PASS_BOTTOM_Y_KEY,
+                AutoAimConstants.BLUE_PASS_TARGET_BOTTOM_DEFAULT_FIELD_METERS.getY()));
     Translation2d bluePassTopTarget =
         new Translation2d(
-            SmartDashboard.getNumber(kBluePassTopXKey, kBluePassTargetTopDefaultFieldMeters.getX()),
             SmartDashboard.getNumber(
-                kBluePassTopYKey, kBluePassTargetTopDefaultFieldMeters.getY()));
+                AutoAimConstants.BLUE_PASS_TOP_X_KEY,
+                AutoAimConstants.BLUE_PASS_TARGET_TOP_DEFAULT_FIELD_METERS.getX()),
+            SmartDashboard.getNumber(
+                AutoAimConstants.BLUE_PASS_TOP_Y_KEY,
+                AutoAimConstants.BLUE_PASS_TARGET_TOP_DEFAULT_FIELD_METERS.getY()));
     Translation2d redPassBottomTarget =
         new Translation2d(
-            kFieldLengthMeters - bluePassBottomTarget.getX(), bluePassBottomTarget.getY());
+            AutoAimConstants.FIELD_LENGTH_METERS - bluePassBottomTarget.getX(),
+            bluePassBottomTarget.getY());
     Translation2d redPassTopTarget =
-        new Translation2d(kFieldLengthMeters - bluePassTopTarget.getX(), bluePassTopTarget.getY());
+        new Translation2d(
+            AutoAimConstants.FIELD_LENGTH_METERS - bluePassTopTarget.getX(),
+            bluePassTopTarget.getY());
 
     boolean inOwnZone = isRobotInOwnZone(robotPose);
     if (inOwnZone) {
@@ -680,19 +914,25 @@ public class RobotContainer {
     DriverStation.Alliance alliance =
         DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue);
     double ownZoneMaxXMeters =
-        SmartDashboard.getNumber(kOwnZoneMaxXMetersKey, kOwnZoneMaxXDefaultMeters);
+        SmartDashboard.getNumber(
+            AutoAimConstants.OWN_ZONE_MAX_X_METERS_KEY,
+            AutoAimConstants.OWN_ZONE_MAX_X_METERS_DEFAULT);
     double xFromOwnWallMeters =
         alliance == DriverStation.Alliance.Blue
             ? robotPose.getX()
-            : kFieldLengthMeters - robotPose.getX();
+            : AutoAimConstants.FIELD_LENGTH_METERS - robotPose.getX();
     return xFromOwnWallMeters <= ownZoneMaxXMeters;
   }
 
   private boolean isRobotInPassNoShootZone(Pose2d robotPose) {
     double passNoShootCenterY =
-        SmartDashboard.getNumber(kPassNoShootCenterYKey, kPassNoShootCenterYDefaultMeters);
+        SmartDashboard.getNumber(
+            AutoAimConstants.PASS_NO_SHOOT_CENTER_Y_KEY,
+            AutoAimConstants.PASS_NO_SHOOT_CENTER_Y_DEFAULT);
     double passNoShootWidthMeters =
-        SmartDashboard.getNumber(kPassNoShootWidthMetersKey, kPassNoShootWidthDefaultMeters);
+        SmartDashboard.getNumber(
+            AutoAimConstants.PASS_NO_SHOOT_WIDTH_METERS_KEY,
+            AutoAimConstants.PASS_NO_SHOOT_WIDTH_METERS_DEFAULT);
     double halfWidthMeters = Math.max(0.0, passNoShootWidthMeters) / 2.0;
     return Math.abs(robotPose.getY() - passNoShootCenterY) <= halfWidthMeters;
   }
@@ -728,6 +968,42 @@ public class RobotContainer {
     table.put(5.500, .28);
     table.put(6.287, 0.70);
     table.put(12.5, 0.75);
+    return table;
+  }
+
+  private static NavigableMap<Double, Double> buildShooterPassing() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(1.565, 26.0);
+    table.put(2.014, 28.0);
+    table.put(2.455, 29.0);
+    table.put(2.971, 31.0);
+    table.put(3.581, 35.0);
+    table.put(4.1, 37.0);
+    table.put(4.5, 40.0);
+    table.put(4.96, 42.0);
+    table.put(5.391, 44.0); // was 43
+    table.put(5.500, 45.0);
+    table.put(6.287, 50.0);
+    table.put(12.5, 80.0);
+    return table;
+  }
+
+  private static NavigableMap<Double, Double> buildShooterPassinghood() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(1.565, 0.0 + hoodpassingaddition);
+    table.put(2.014, 0.05 + hoodpassingaddition);
+    table.put(2.455, 0.09 + hoodpassingaddition);
+    table.put(2.971, 0.12 + hoodpassingaddition);
+    table.put(3.581, 0.16 + hoodpassingaddition);
+    table.put(3.581, 0.16 + hoodpassingaddition);
+    table.put(3.581, 0.16 + hoodpassingaddition);
+    table.put(4.1, 0.19 + hoodpassingaddition);
+    table.put(4.5, 0.21 + hoodpassingaddition);
+    table.put(4.96, 0.23 + hoodpassingaddition);
+    table.put(5.391, 0.27 + hoodpassingaddition);
+    table.put(5.500, .28 + hoodpassingaddition);
+    table.put(6.287, 0.70 + hoodpassingaddition);
+    table.put(12.5, 0.75 + hoodpassingaddition);
     return table;
   }
 }

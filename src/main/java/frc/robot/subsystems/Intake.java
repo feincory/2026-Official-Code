@@ -61,10 +61,10 @@ public class Intake extends SubsystemBase {
 
     TalonFXConfiguration spinnerCfg = new TalonFXConfiguration();
 
-    spinnerCfg.CurrentLimits.SupplyCurrentLimit = 35;
+    spinnerCfg.CurrentLimits.SupplyCurrentLimit = 45;
     spinnerCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    spinnerCfg.CurrentLimits.StatorCurrentLimit = 35;
+    spinnerCfg.CurrentLimits.StatorCurrentLimit = 45;
     spinnerCfg.CurrentLimits.StatorCurrentLimitEnable = true;
 
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -102,7 +102,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void runintake() {
-    m_spinner.set(-.77);
+    m_spinner.set(-1.0);
   }
 
   public void stopintake() {
@@ -148,6 +148,12 @@ public class Intake extends SubsystemBase {
   public void stopOscillation() {
     disableOscillation();
     setExtenderPosition(intakedeployposition);
+  }
+
+  public void exitAutoToTeleop() {
+    disableOscillation();
+    setExtenderPosition(intakedeployposition);
+    runintake();
   }
 
   // homing commands

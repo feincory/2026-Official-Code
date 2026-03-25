@@ -98,6 +98,8 @@ public class ShooterCalc {
   private final double turretMaxCommandDegrees;
   private final NavigableMap<Double, Double> shooterRpsByDistanceMeters;
   private final NavigableMap<Double, Double> hoodPercentByDistanceMeters;
+  private final NavigableMap<Double, Double> passingShooterRpsByDistanceMeters;
+  private final NavigableMap<Double, Double> passingHoodPercentByDistanceMeters;
 
   /**
    * Default constructor. Robot-specific values should be tuned for your mechanism.
@@ -112,6 +114,8 @@ public class ShooterCalc {
         -225.0,
         225.0,
         defaultShooterRpsTable(),
+        defaultHoodTable(),
+        defaultShooterRpsTable(),
         defaultHoodTable());
   }
 
@@ -122,7 +126,9 @@ public class ShooterCalc {
       double turretMinCommandDegrees,
       double turretMaxCommandDegrees,
       NavigableMap<Double, Double> shooterRpsByDistanceMeters,
-      NavigableMap<Double, Double> hoodPercentByDistanceMeters) {
+      NavigableMap<Double, Double> hoodPercentByDistanceMeters,
+      NavigableMap<Double, Double> passingShooterRpsByDistanceMeters,
+      NavigableMap<Double, Double> passingHoodPercentByDistanceMeters) {
     this.turretOffsetFromRobotCenterMeters = turretOffsetFromRobotCenterMeters;
     this.turretZeroDirectionInRobotFrame = turretZeroDirectionInRobotFrame;
     this.turretPositiveClockwise = turretPositiveClockwise;
@@ -130,6 +136,28 @@ public class ShooterCalc {
     this.turretMaxCommandDegrees = turretMaxCommandDegrees;
     this.shooterRpsByDistanceMeters = new TreeMap<>(shooterRpsByDistanceMeters);
     this.hoodPercentByDistanceMeters = new TreeMap<>(hoodPercentByDistanceMeters);
+    this.passingShooterRpsByDistanceMeters = new TreeMap<>(passingShooterRpsByDistanceMeters);
+    this.passingHoodPercentByDistanceMeters = new TreeMap<>(passingHoodPercentByDistanceMeters);
+  }
+
+  public ShooterCalc(
+      Translation2d turretOffsetFromRobotCenterMeters,
+      Rotation2d turretZeroDirectionInRobotFrame,
+      boolean turretPositiveClockwise,
+      double turretMinCommandDegrees,
+      double turretMaxCommandDegrees,
+      NavigableMap<Double, Double> shooterRpsByDistanceMeters,
+      NavigableMap<Double, Double> hoodPercentByDistanceMeters) {
+    this(
+        turretOffsetFromRobotCenterMeters,
+        turretZeroDirectionInRobotFrame,
+        turretPositiveClockwise,
+        turretMinCommandDegrees,
+        turretMaxCommandDegrees,
+        shooterRpsByDistanceMeters,
+        hoodPercentByDistanceMeters,
+        shooterRpsByDistanceMeters,
+        hoodPercentByDistanceMeters);
   }
 
   /**
@@ -139,6 +167,11 @@ public class ShooterCalc {
    * @param goalCenterField goal center position in field coordinates (meters)
    */
   public ShotSolution calculateShot(Pose2d robotPose, Translation2d goalCenterField) {
+    return calculateShot(robotPose, goalCenterField, false);
+  }
+
+  public ShotSolution calculateShot(
+      Pose2d robotPose, Translation2d goalCenterField, boolean isPassingShot) {
     // Rotate robot-relative turret offset into the field frame.
     Translation2d turretFieldOffset =
         turretOffsetFromRobotCenterMeters.rotateBy(robotPose.getRotation());
@@ -171,8 +204,12 @@ public class ShooterCalc {
         MathUtil.clamp(turretCommandDegrees, turretMinCommandDegrees, turretMaxCommandDegrees);
 
     double effectiveDistanceMeters = Math.max(0.0, distanceMeters + distanceOffsetMeters);
-    double shooterRps = interpolate(effectiveDistanceMeters, shooterRpsByDistanceMeters);
-    double hoodPercent = interpolate(effectiveDistanceMeters, hoodPercentByDistanceMeters);
+    NavigableMap<Double, Double> shooterTable =
+        isPassingShot ? passingShooterRpsByDistanceMeters : shooterRpsByDistanceMeters;
+    NavigableMap<Double, Double> hoodTable =
+        isPassingShot ? passingHoodPercentByDistanceMeters : hoodPercentByDistanceMeters;
+    double shooterRps = interpolate(effectiveDistanceMeters, shooterTable);
+    double hoodPercent = interpolate(effectiveDistanceMeters, hoodTable);
 
     return new ShotSolution(
         distanceMeters,
@@ -215,8 +252,20 @@ public class ShooterCalc {
       double goalXFieldMeters,
       double goalYFieldMeters) {
     return calculateShot(
+        robotXMeters, robotYMeters, gyroYawDegrees, goalXFieldMeters, goalYFieldMeters, false);
+  }
+
+  public ShotSolution calculateShot(
+      double robotXMeters,
+      double robotYMeters,
+      double gyroYawDegrees,
+      double goalXFieldMeters,
+      double goalYFieldMeters,
+      boolean isPassingShot) {
+    return calculateShot(
         new Pose2d(robotXMeters, robotYMeters, Rotation2d.fromDegrees(gyroYawDegrees)),
-        new Translation2d(goalXFieldMeters, goalYFieldMeters));
+        new Translation2d(goalXFieldMeters, goalYFieldMeters),
+        isPassingShot);
   }
 
   private static double interpolate(double x, NavigableMap<Double, Double> table) {
