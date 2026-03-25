@@ -65,8 +65,8 @@ public final class Constants {
     public static final String BLUE_PASS_TOP_Y_KEY = "AutoAim/BluePassTopY";
 
     public static final double FIELD_LENGTH_METERS = 16.541;
-    public static final double LATERAL_OFFSET_INCHES_DEFAULT = -3.0;
-    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -2.0;
+    public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
+    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 6;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 2.5;
     public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 2.54;
@@ -102,7 +102,7 @@ public final class Constants {
     public static final String TARGET_LEAD_SECONDS_KEY = "MovingShot/TargetLeadSec";
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingShot/UseMotionCompensation";
 
-    public static final double LATERAL_OFFSET_INCHES_DEFAULT = -8;
+    public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
     public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 6;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 5.0;
@@ -137,8 +137,8 @@ public final class Constants {
     public static final String TARGET_LEAD_SECONDS_KEY = "MovingPassShot/TargetLeadSec";
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingPassShot/UseMotionCompensation";
 
-    public static final double LATERAL_OFFSET_INCHES_DEFAULT = -8;
-    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 6;
+    public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
+    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 10;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 6.0;
     public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 6;
