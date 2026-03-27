@@ -34,6 +34,7 @@ public final class Constants {
   public static double intakemidstopposition = 8;
   public static double intakeretractposition = 0;
   public static double intakeOscillationFrequencyHz = .7;
+  public static double intakeOscillationAutoCancelSpeedMps = 1.0;
   public static int kintakehomeswt = 0;
 
   // shooter constancts

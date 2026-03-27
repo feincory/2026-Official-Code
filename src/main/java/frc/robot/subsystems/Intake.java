@@ -17,12 +17,16 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
   private static final String kOscillationFrequencyHzKey = "Intake/OscillationFrequencyHz";
+  private static final String kOscillationAutoCancelSpeedKey =
+      "Intake/OscillationAutoCancelSpeedMps";
 
   /** Creates a new Intake. */
   private final TalonFX m_spinner = new TalonFX(28, kCANBus);
@@ -32,6 +36,7 @@ public class Intake extends SubsystemBase {
   private final Timer m_oscillationTimer = new Timer();
 
   private boolean m_oscillating = false;
+  private DoubleSupplier m_driveSpeedMetersPerSecSupplier = () -> 0.0;
 
   static boolean intakehomed;
 
@@ -51,6 +56,7 @@ public class Intake extends SubsystemBase {
         // Take approximately 0.1 seconds to reach max accel
         .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(500));
     Slot0Configs slot0 = extendercfg.Slot0;
+    extendercfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     slot0.kS = 0.5; // Add 0.25 V output to overcome static friction
     slot0.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
@@ -78,11 +84,25 @@ public class Intake extends SubsystemBase {
     }
     intakehomed = false;
     SmartDashboard.putNumber(kOscillationFrequencyHzKey, intakeOscillationFrequencyHz);
+    SmartDashboard.putNumber(
+        kOscillationAutoCancelSpeedKey, intakeOscillationAutoCancelSpeedMps);
     SmartDashboard.putBoolean("Intake/Oscillating", false);
   }
 
   @Override
   public void periodic() {
+    if (m_oscillating) {
+      double autoCancelSpeedMps =
+          Math.max(
+              0.0,
+              SmartDashboard.getNumber(
+                  kOscillationAutoCancelSpeedKey, intakeOscillationAutoCancelSpeedMps));
+      double driveSpeedMetersPerSec = Math.abs(m_driveSpeedMetersPerSecSupplier.getAsDouble());
+      if (driveSpeedMetersPerSec > autoCancelSpeedMps) {
+        stopOscillation();
+      }
+    }
+
     if (m_oscillating) {
       double frequencyHz =
           Math.max(
@@ -99,6 +119,11 @@ public class Intake extends SubsystemBase {
     SmartDashboard.putNumber("Spinner Temp", m_spinner.getDeviceTemp().getValueAsDouble());
     SmartDashboard.putNumber("Spinner TCurrent", m_spinner.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putBoolean("Intake/Oscillating", m_oscillating);
+  }
+
+  public void setDriveSpeedMetersPerSecSupplier(DoubleSupplier driveSpeedMetersPerSecSupplier) {
+    m_driveSpeedMetersPerSecSupplier =
+        driveSpeedMetersPerSecSupplier != null ? driveSpeedMetersPerSecSupplier : () -> 0.0;
   }
 
   public void runintake() {
