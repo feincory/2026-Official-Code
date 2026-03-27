@@ -127,7 +127,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public void runshooter() {
-    m_shooter.set(.31);
+    m_shooter.set(.33);
     m_accelmtr.set(.45);
   }
 

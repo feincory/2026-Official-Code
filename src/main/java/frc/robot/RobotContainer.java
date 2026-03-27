@@ -254,8 +254,8 @@ public class RobotContainer {
                 () -> shooter.shootersetvelocity(SmartDashboard.getNumber("Shooter RPS", 30.0))));
     operatorcontroller.x().onFalse(new InstantCommand(shooter::stopshooter));
 
-    operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
-    operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+    // operatorcontroller.a().onTrue(new InstantCommand(whirlpool::startwhirlpool));
+    // operatorcontroller.a().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
 
     flightcontroller.button(7).onTrue(new InstantCommand(shooter::reverseshooter));
     flightcontroller.button(7).onFalse(new InstantCommand(shooter::stopshooter));
@@ -306,6 +306,11 @@ public class RobotContainer {
         .button(5)
         .whileTrue(Commands.run(() -> runAutoAim(true), turret, shooter, whirlpool));
 
+    // for 2nd driver to trigger shooter
+    operatorcontroller
+        .a()
+        .whileTrue(Commands.run(() -> runAutoAim(true), turret, shooter, whirlpool));
+
     flightcontroller
         .button(12)
         .whileTrue(Commands.run(() -> runMovingShot(true), turret, shooter, whirlpool));
@@ -313,6 +318,12 @@ public class RobotContainer {
     flightcontroller.button(4).onFalse(new InstantCommand(shooter::stopshooter));
     flightcontroller
         .button(5)
+        .onFalse(
+            Commands.sequence(
+                new InstantCommand(shooter::stopshooter),
+                new InstantCommand(whirlpool::stopwhirlpool)));
+    operatorcontroller
+        .a()
         .onFalse(
             Commands.sequence(
                 new InstantCommand(shooter::stopshooter),
