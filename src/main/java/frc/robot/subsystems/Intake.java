@@ -84,8 +84,7 @@ public class Intake extends SubsystemBase {
     }
     intakehomed = false;
     SmartDashboard.putNumber(kOscillationFrequencyHzKey, intakeOscillationFrequencyHz);
-    SmartDashboard.putNumber(
-        kOscillationAutoCancelSpeedKey, intakeOscillationAutoCancelSpeedMps);
+    SmartDashboard.putNumber(kOscillationAutoCancelSpeedKey, intakeOscillationAutoCancelSpeedMps);
     SmartDashboard.putBoolean("Intake/Oscillating", false);
   }
 

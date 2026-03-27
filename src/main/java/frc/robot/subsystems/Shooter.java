@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
   private static final double kHoodMinPosition = 0.0;
-  private static final double kHoodMaxPosition = .92;
+  private static final double kHoodMaxPosition = .85;
 
   /** Creates a new Shooter. */
   private final TalonFX m_shooter = new TalonFX(36, "rio");
@@ -172,11 +172,11 @@ public class Shooter extends SubsystemBase {
   }
 
   public void shooterhoodup() {
-    m_hoodtiltmtr.set(.1);
+    m_hoodtiltmtr.set(.04);
   }
 
   public void shooterhooddown() {
-    m_hoodtiltmtr.set(-.1);
+    m_hoodtiltmtr.set(-.04);
   }
 
   public void stopshooterhood() {

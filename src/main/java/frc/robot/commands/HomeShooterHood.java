@@ -17,8 +17,8 @@ public class HomeShooterHood extends Command {
   private final Shooter shooter;
 
   private final DigitalInput homeSwitch;
-  private static final double HOMING_SPEED = -0.05; // Slow descent
-  private static final double TIMEOUT = 5.0; // Stop after 3 seconds
+  private static final double HOMING_SPEED = -0.04; // Slow descent
+  private static final double TIMEOUT = 4.0; // Stop after 3 seconds
   private Timer timer = new Timer();
 
   public HomeShooterHood(Shooter shooter) {
