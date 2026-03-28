@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "1114 Right Bump Mid-Human"
+            "pathName": "anti 6090 left  Bump Mid-Human"
           }
         },
         {
@@ -50,7 +50,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.75
+            "waitTime": 3.5
           }
         },
         {
