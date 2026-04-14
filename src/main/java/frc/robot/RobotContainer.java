@@ -218,8 +218,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> flightcontroller.getRawAxis(1),
-            () -> -flightcontroller.getRawAxis(0),
+            () -> flightcontroller.getRawAxis(1) * 1.1,
+            () -> -flightcontroller.getRawAxis(0) * 1.1,
             () -> -flightcontroller.getRawAxis(3),
             this::getMovingShotDriveLinearScale,
             this::getMovingShotDriveOmegaScale));
@@ -278,6 +278,9 @@ public class RobotContainer {
 
     flightcontroller.button(7).onTrue(new InstantCommand(whirlpool::reversewhirlpool));
     flightcontroller.button(7).onFalse(new InstantCommand(whirlpool::stopwhirlpool));
+
+    flightcontroller.button(7).onTrue(new InstantCommand(intake::reverseintake));
+    flightcontroller.button(7).onFalse(new InstantCommand(intake::stopintake));
 
     operatorcontroller.b().onTrue(new InstantCommand(whirlpool::startwhirlpool));
     operatorcontroller.b().onFalse(new InstantCommand(whirlpool::stopwhirlpool));
@@ -957,10 +960,10 @@ public class RobotContainer {
     table.put(2.971, 31.0);
     table.put(3.581, 35.0);
     table.put(4.1, 37.0);
-    table.put(4.5, 40.0);
-    table.put(4.96, 42.0);
-    table.put(5.391, 44.0); // was 43
-    table.put(5.500, 45.0);
+    table.put(4.5, 38.5);
+    table.put(4.96, 39.5);
+    table.put(5.391, 40.0); // was 43
+    table.put(5.500, 42.0);
     table.put(6.287, 50.0);
     table.put(12.5, 80.0);
     return table;
@@ -991,9 +994,9 @@ public class RobotContainer {
     table.put(2.971, 31.0);
     table.put(3.581, 35.0);
     table.put(4.1, 37.0);
-    table.put(4.5, 40.0);
-    table.put(4.96, 42.0);
-    table.put(5.391, 44.0); // was 43
+    table.put(4.5, 39.0);
+    table.put(4.96, 40.0);
+    table.put(5.391, 42.5); // was 43
     table.put(5.500, 45.0);
     table.put(6.287, 50.0);
     table.put(12.5, 80.0);

@@ -67,7 +67,7 @@ public final class Constants {
 
     public static final double FIELD_LENGTH_METERS = 16.541;
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
-    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 6;
+    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -4;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 2.5;
     public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 2.54;
@@ -104,17 +104,17 @@ public final class Constants {
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingShot/UseMotionCompensation";
 
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
-    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 6;
+    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -14;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 5.0;
     public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 3.75;
     // AutoAimConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT;
     public static final double SHOOTER_READY_TOLERANCE_RPS_DEFAULT =
         AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT;
-    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 0.6;
-    public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.10;
+    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 1;
+    public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.12;
     public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.10;
-    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.8;
+    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.1;
     public static final boolean USE_MOTION_COMPENSATION_DEFAULT = true;
 
     private MovingShotConstants() {}
@@ -139,7 +139,7 @@ public final class Constants {
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingPassShot/UseMotionCompensation";
 
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
-    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = 10;
+    public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -4;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 6.0;
     public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 7;
