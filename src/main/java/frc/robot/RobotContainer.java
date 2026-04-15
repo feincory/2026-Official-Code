@@ -106,6 +106,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("Run Intake", new InstantCommand(intake::runintake));
     NamedCommands.registerCommand("Run Whirlpool", new InstantCommand(whirlpool::startwhirlpool));
     NamedCommands.registerCommand("Stop Whirlpool", new InstantCommand(whirlpool::stopwhirlpool));
+    NamedCommands.registerCommand("Stop Shooter", new InstantCommand(shooter::stopshooter));
 
     NamedCommands.registerCommand("Deploy Intake", new InstantCommand(intake::deployintake));
     NamedCommands.registerCommand("Osc Intake", new InstantCommand(intake::startOscillation));
@@ -996,10 +997,10 @@ public class RobotContainer {
     table.put(4.1, 37.0);
     table.put(4.5, 39.0);
     table.put(4.96, 40.0);
-    table.put(5.391, 42.5); // was 43
-    table.put(5.500, 45.0);
-    table.put(6.287, 50.0);
-    table.put(12.5, 80.0);
+    table.put(5.391, 40.5); // was 43
+    table.put(5.500, 40.0);
+    table.put(6.287, 45.0);
+    table.put(12.5, 65.0);
     return table;
   }
 

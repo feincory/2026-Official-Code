@@ -69,7 +69,7 @@ public class Intake extends SubsystemBase {
 
     spinnerCfg.CurrentLimits.SupplyCurrentLimit = 45;
     spinnerCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-
+    spinnerCfg.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = .25;
     spinnerCfg.CurrentLimits.StatorCurrentLimit = 45;
     spinnerCfg.CurrentLimits.StatorCurrentLimitEnable = true;
 
