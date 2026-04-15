@@ -66,7 +66,7 @@ public class Turret extends SubsystemBase {
     CANcoderConfiguration cc_cfg = new CANcoderConfiguration();
     cc_cfg.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(Rotations.of(0.5));
     cc_cfg.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-    cc_cfg.MagnetSensor.withMagnetOffset(Rotations.of(0.362 + 0.00319)); // was .449 + .065
+    cc_cfg.MagnetSensor.withMagnetOffset(Rotations.of(.4226 + .151)); // was 0.362 + 0.00319. When we added, we went to the left
     m_turretcc.getConfigurator().apply(cc_cfg);
 
     TalonFXConfiguration cfg = new TalonFXConfiguration();
