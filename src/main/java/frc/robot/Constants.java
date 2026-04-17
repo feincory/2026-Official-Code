@@ -106,14 +106,14 @@ public final class Constants {
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
     public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -14;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
-    public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 5.0;
-    public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 3.75;
+    public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 5.5; // was 5.0
+    public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 4.5; // was 3.75
     // AutoAimConstants.TURRET_READY_TOLERANCE_DEG_DEFAULT;
     public static final double SHOOTER_READY_TOLERANCE_RPS_DEFAULT =
         AutoAimConstants.SHOOTER_READY_TOLERANCE_RPS_DEFAULT;
-    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 1;
-    public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.12;
-    public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.10;
+    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 1.15; // was 1.0
+    public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.10; // was .12
+    public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.08; // was .1
     public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.1;
     public static final boolean USE_MOTION_COMPENSATION_DEFAULT = true;
 
@@ -142,14 +142,14 @@ public final class Constants {
     public static final double DISTANCE_OFFSET_INCHES_DEFAULT = -4;
     public static final double TURRET_ROTATION_LEAD_SECONDS_DEFAULT = 0.03;
     public static final double TURRET_ROTATION_COMP_SCALE_DEFAULT = 6.0;
-    public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 7;
+    public static final double TURRET_READY_TOLERANCE_DEG_DEFAULT = 9.0;
 
-    public static final double SHOOTER_READY_TOLERANCE_RPS_DEFAULT = 8;
+    public static final double SHOOTER_READY_TOLERANCE_RPS_DEFAULT = 10;
 
-    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 2.0;
+    public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 2.5;
     public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.35;
-    public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.4;
-    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.5;
+    public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.30;
+    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.25;
     public static final boolean USE_MOTION_COMPENSATION_DEFAULT = true;
 
     private MovingPassShotConstants() {}

@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.343573386667921,
-        "y": 6.112415306635215
+        "x": 2.174852503019621,
+        "y": 5.911653521352314
       },
       "isLocked": false,
       "linkedName": "depot"
     },
     {
       "anchor": {
-        "x": 2.270686746987952,
-        "y": 3.6634578313253012
+        "x": 2.121,
+        "y": 3.663
       },
       "prevControl": {
-        "x": 2.269963412185155,
-        "y": 5.2453642228664465
+        "x": 2.120276665197203,
+        "y": 5.244906391541145
       },
       "nextControl": {
-        "x": 2.2714100817907488,
-        "y": 2.081551439784157
+        "x": 2.121723334802797,
+        "y": 2.0810936084588554
       },
       "isLocked": false,
       "linkedName": null
@@ -36,8 +36,8 @@
         "y": 0.691120481927711
       },
       "prevControl": {
-        "x": 1.4729638554216864,
-        "y": 1.161012048192772
+        "x": 1.702376605585744,
+        "y": 0.8335213472293846
       },
       "nextControl": null,
       "isLocked": false,
@@ -53,6 +53,19 @@
       "constraints": {
         "maxVelocity": 1.0,
         "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    },
+    {
+      "name": "Human slow down",
+      "minWaypointRelativePos": 1.7070559610705593,
+      "maxWaypointRelativePos": 2.0,
+      "constraints": {
+        "maxVelocity": 1.0,
+        "maxAcceleration": 1.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
