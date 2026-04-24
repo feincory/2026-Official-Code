@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Whirlpool extends SubsystemBase {
+  private static final double kFloorStartDelaySec = 0.4;
+
   /** Creates a new Whirlpool. */
   private final TalonFX m_whirlpool = new TalonFX(27, kCANBus);
 
@@ -23,14 +25,18 @@ public class Whirlpool extends SubsystemBase {
 
   private final TalonFX m_feeder = new TalonFX(24, kCANBus);
 
+  private boolean whirlpoolRunning = false;
+  private double floorStartTimeSec = Double.NaN;
+
   public Whirlpool() {
+
     SmartDashboard.putNumber("Whirlpool Speed", 1.0);
     SmartDashboard.putNumber("Floor Speed", .7);
 
     TalonFXConfiguration whirlpoolconfig = new TalonFXConfiguration();
-    whirlpoolconfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = .3;
-    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .3;
-    whirlpoolconfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = .3;
+    whirlpoolconfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = .1;
+    whirlpoolconfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = .1;
+    whirlpoolconfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = .1;
     whirlpoolconfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = .5;
     whirlpoolconfig.CurrentLimits.StatorCurrentLimit = 25;
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -81,23 +87,36 @@ public class Whirlpool extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    // if (whirlpoolRunning && Timer.getFPGATimestamp() >= floorStartTimeSec) {
+    //   m_floor.set(SmartDashboard.getNumber("Floor Speed", .7));
+    // }
   }
 
   public void startwhirlpool() {
     m_whirlpool.set(SmartDashboard.getNumber("Whirlpool Speed", 1.0));
-    m_floor.set(SmartDashboard.getNumber("Floor Speed", .7));
-    // m_whirlpool.set(1.0);
     m_feeder.set(.8);
+    m_floor.set(SmartDashboard.getNumber("Floor Speed", .7));
+
+    // if (!whirlpoolRunning) {
+    //   whirlpoolRunning = true;
+    //   floorStartTimeSec = Timer.getFPGATimestamp() + kFloorStartDelaySec;
+    //   // m_floor.set(0);
+    // } else if (Timer.getFPGATimestamp() >= floorStartTimeSec) {
+    //   m_floor.set(SmartDashboard.getNumber("Floor Speed", .7));
+    // }
   }
 
   public void stopwhirlpool() {
+    whirlpoolRunning = false;
+    floorStartTimeSec = Double.NaN;
     m_whirlpool.set(0);
     m_floor.set(0);
     m_feeder.set(0);
   }
 
   public void reversewhirlpool() {
+    whirlpoolRunning = false;
+    floorStartTimeSec = Double.NaN;
     m_whirlpool.set(-.5);
     m_floor.set(-.5);
     m_feeder.set(-.5);

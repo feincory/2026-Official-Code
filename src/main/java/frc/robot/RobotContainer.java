@@ -472,9 +472,6 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY,
         MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT);
-    SmartDashboard.putNumber(
-        MovingShotConstants.TARGET_LEAD_SECONDS_KEY,
-        MovingShotConstants.TARGET_LEAD_SECONDS_DEFAULT);
     SmartDashboard.putBoolean(
         MovingShotConstants.USE_MOTION_COMPENSATION_KEY,
         MovingShotConstants.USE_MOTION_COMPENSATION_DEFAULT);
@@ -506,9 +503,6 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_KEY,
         MovingPassShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT);
-    SmartDashboard.putNumber(
-        MovingPassShotConstants.TARGET_LEAD_SECONDS_KEY,
-        MovingPassShotConstants.TARGET_LEAD_SECONDS_DEFAULT);
     SmartDashboard.putBoolean(
         MovingPassShotConstants.USE_MOTION_COMPENSATION_KEY,
         MovingPassShotConstants.USE_MOTION_COMPENSATION_DEFAULT);
@@ -623,11 +617,12 @@ public class RobotContainer {
         SmartDashboard.getBoolean(
             getMovingShotUseMotionCompensationKey(isPassingShot),
             getMovingShotUseMotionCompensationDefault(isPassingShot));
+    double targetLeadLookupDistanceMeters =
+        shooterCalc.calculateShot(robotPose, targetCenter, isPassingShot).getDistanceMeters();
+    double targetLeadSec =
+        interpolateLookup(
+            targetLeadLookupDistanceMeters, getMovingShotTargetLeadTable(isPassingShot));
     if (useMotionCompensation) {
-      double targetLeadSec =
-          SmartDashboard.getNumber(
-              getMovingShotTargetLeadKey(isPassingShot),
-              getMovingShotTargetLeadDefault(isPassingShot));
       compensatedTarget = targetCenter.minus(fieldVelocity.times(targetLeadSec));
     }
 
@@ -678,6 +673,9 @@ public class RobotContainer {
     SmartDashboard.putNumber("MovingShot/TargetY", targetCenter.getY());
     SmartDashboard.putNumber("MovingShot/CompensatedTargetX", compensatedTarget.getX());
     SmartDashboard.putNumber("MovingShot/CompensatedTargetY", compensatedTarget.getY());
+    SmartDashboard.putNumber(
+        "MovingShot/TargetLeadLookupDistanceMeters", targetLeadLookupDistanceMeters);
+    SmartDashboard.putNumber("MovingShot/TargetLeadSecActive", targetLeadSec);
     SmartDashboard.putNumber("MovingShot/DistanceMeters", shot.getDistanceMeters());
     SmartDashboard.putNumber(
         "MovingShot/EffectiveDistanceMeters", shot.getEffectiveDistanceMeters());
@@ -849,18 +847,6 @@ public class RobotContainer {
         : MovingShotConstants.DRIVER_MAX_OMEGA_SCALE_DEFAULT;
   }
 
-  private String getMovingShotTargetLeadKey(boolean isPassingShot) {
-    return isPassingShot
-        ? MovingPassShotConstants.TARGET_LEAD_SECONDS_KEY
-        : MovingShotConstants.TARGET_LEAD_SECONDS_KEY;
-  }
-
-  private double getMovingShotTargetLeadDefault(boolean isPassingShot) {
-    return isPassingShot
-        ? MovingPassShotConstants.TARGET_LEAD_SECONDS_DEFAULT
-        : MovingShotConstants.TARGET_LEAD_SECONDS_DEFAULT;
-  }
-
   private String getMovingShotUseMotionCompensationKey(boolean isPassingShot) {
     return isPassingShot
         ? MovingPassShotConstants.USE_MOTION_COMPENSATION_KEY
@@ -873,8 +859,31 @@ public class RobotContainer {
         : MovingShotConstants.USE_MOTION_COMPENSATION_DEFAULT;
   }
 
+  private NavigableMap<Double, Double> getMovingShotTargetLeadTable(boolean isPassingShot) {
+    return isPassingShot ? buildMovingPassTargetLeadTable() : buildMovingShotTargetLeadTable();
+  }
+
   private void adjustDashboardNumber(String key, double delta) {
     SmartDashboard.putNumber(key, SmartDashboard.getNumber(key, 0.0) + delta);
+  }
+
+  private static double interpolateLookup(double x, NavigableMap<Double, Double> table) {
+    if (table.isEmpty()) {
+      return 0.0;
+    }
+    var lower = table.floorEntry(x);
+    var upper = table.ceilingEntry(x);
+    if (lower == null) {
+      return upper.getValue();
+    }
+    if (upper == null) {
+      return lower.getValue();
+    }
+    if (Math.abs(upper.getKey() - lower.getKey()) < 1e-9) {
+      return lower.getValue();
+    }
+    double t = (x - lower.getKey()) / (upper.getKey() - lower.getKey());
+    return lower.getValue() + t * (upper.getValue() - lower.getValue());
   }
 
   private Translation2d getCurrentAllianceAimTarget(Pose2d robotPose) {
@@ -955,10 +964,10 @@ public class RobotContainer {
 
   private static NavigableMap<Double, Double> buildShooterRpsTable() {
     NavigableMap<Double, Double> table = new TreeMap<>();
-    table.put(1.565, 26.0);
-    table.put(2.014, 28.0);
-    table.put(2.455, 29.0);
-    table.put(2.971, 31.0);
+    table.put(1.565, 28.0);
+    table.put(2.014, 29.5);
+    table.put(2.455, 31.0);
+    table.put(2.971, 33.0);
     table.put(3.581, 35.0);
     table.put(4.1, 37.0);
     table.put(4.5, 38.5);
@@ -1020,6 +1029,22 @@ public class RobotContainer {
     table.put(5.500, .28 + hoodpassingaddition);
     table.put(6.287, 0.70 + hoodpassingaddition);
     table.put(12.5, 0.75 + hoodpassingaddition);
+    return table;
+  }
+
+  private static NavigableMap<Double, Double> buildMovingShotTargetLeadTable() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(2.0, .6);
+    table.put(4.0, .8);
+    table.put(5.4, 1.1);
+    return table;
+  }
+
+  private static NavigableMap<Double, Double> buildMovingPassTargetLeadTable() {
+    NavigableMap<Double, Double> table = new TreeMap<>();
+    table.put(2.5, 1.25);
+    table.put(5.0, 1.5);
+    table.put(7.0, 1.75);
     return table;
   }
 }

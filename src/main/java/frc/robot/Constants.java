@@ -100,7 +100,6 @@ public final class Constants {
         "MovingShot/AutoShootMaxRobotSpeedMps";
     public static final String DRIVER_MAX_LINEAR_SCALE_KEY = "MovingShot/DriverMaxLinearScale";
     public static final String DRIVER_MAX_OMEGA_SCALE_KEY = "MovingShot/DriverMaxOmegaScale";
-    public static final String TARGET_LEAD_SECONDS_KEY = "MovingShot/TargetLeadSec";
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingShot/UseMotionCompensation";
 
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
@@ -114,7 +113,6 @@ public final class Constants {
     public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 1.15; // was 1.0
     public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.10; // was .12
     public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.08; // was .1
-    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.1;
     public static final boolean USE_MOTION_COMPENSATION_DEFAULT = true;
 
     private MovingShotConstants() {}
@@ -135,7 +133,6 @@ public final class Constants {
         "MovingPassShot/AutoShootMaxRobotSpeedMps";
     public static final String DRIVER_MAX_LINEAR_SCALE_KEY = "MovingPassShot/DriverMaxLinearScale";
     public static final String DRIVER_MAX_OMEGA_SCALE_KEY = "MovingPassShot/DriverMaxOmegaScale";
-    public static final String TARGET_LEAD_SECONDS_KEY = "MovingPassShot/TargetLeadSec";
     public static final String USE_MOTION_COMPENSATION_KEY = "MovingPassShot/UseMotionCompensation";
 
     public static final double LATERAL_OFFSET_INCHES_DEFAULT = 0;
@@ -149,7 +146,6 @@ public final class Constants {
     public static final double AUTO_SHOOT_MAX_ROBOT_SPEED_MPS_DEFAULT = 2.5;
     public static final double DRIVER_MAX_LINEAR_SCALE_DEFAULT = 0.35;
     public static final double DRIVER_MAX_OMEGA_SCALE_DEFAULT = 0.30;
-    public static final double TARGET_LEAD_SECONDS_DEFAULT = 1.25;
     public static final boolean USE_MOTION_COMPENSATION_DEFAULT = true;
 
     private MovingPassShotConstants() {}
